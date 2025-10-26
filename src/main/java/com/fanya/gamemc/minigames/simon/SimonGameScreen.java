@@ -2,10 +2,12 @@ package com.fanya.gamemc.minigames.simon;
 
 import com.fanya.gamemc.data.GameRecords;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTexture;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.screen.ScreenTexts;
@@ -122,25 +124,27 @@ public class SimonGameScreen extends Screen {
             }
         });
 
-        RenderSystem.setShaderTexture(0, NOTE_TEXTURE);
+        GpuTexture gpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(NOTE_TEXTURE).getGlTexture();
+        RenderSystem.setShaderTexture(0, gpuTexture);
 
         for (GuiNoteParticle p : guiParticles) {
             float r = ((p.color >> 16) & 0xFF) / 255f;
             float g = ((p.color >> 8) & 0xFF) / 255f;
             float b = (p.color & 0xFF) / 255f;
             float a = p.alpha;
-            RenderSystem.setShaderTexture(0, NOTE_TEXTURE);
+            RenderSystem.setShaderTexture(0, gpuTexture);
             RenderSystem.setShaderColor(r, g, b, a);
 
-            context.drawTexture(NOTE_TEXTURE, (int)p.x, (int)p.y, 0, 0, 16, 16, 16, 16);
+            context.drawTexture(id -> RenderLayer.getGuiTextured(NOTE_TEXTURE), NOTE_TEXTURE, (int)p.x, (int)p.y, 0, 0, 16, 16, 16, 16);
         }
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
 
     }
 
     private void drawNoteBlock(DrawContext context, int x, int y, int size, int index) {
-        RenderSystem.setShaderTexture(0, NOTE_BLOCK_TEXTURE);
-        context.drawTexture(NOTE_BLOCK_TEXTURE, x, y, 0, 0, size, size, size, size);
+        GpuTexture gpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(NOTE_BLOCK_TEXTURE).getGlTexture();
+        RenderSystem.setShaderTexture(0, gpuTexture);
+        context.drawTexture(id -> RenderLayer.getGuiTextured(NOTE_BLOCK_TEXTURE),NOTE_BLOCK_TEXTURE, x, y, 0, 0, size, size, size, size);
 
         if (game != null && game.getState() == SimonGame.State.SHOWING) {
             int showing = game.getCurrentlyShowingIndex();
