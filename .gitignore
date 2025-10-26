@@ -1,0 +1,54 @@
+# Gradle build files
+.gradle/
+build/
+out/
+
+# IDEA project files
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Local history
+.idea/libraries/
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries/
+.idea/caches/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+
+# Fabric / Forge / Minecraft
+run/
+*.class
+*.jar
+*.zip
+*.map
+*.lock
+
+# Generated resources
+generated/
+resources/
+assets/
+
+# Minecraft Launcher / Mod caches
+.minecraft/
+*.litemod
+*.mca
+*.mcr
+*.dat
+
+# Gradle wrapper
+gradle-wrapper.jar
+gradle-wrapper.properties
