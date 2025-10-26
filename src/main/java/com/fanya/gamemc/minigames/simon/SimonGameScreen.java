@@ -6,9 +6,11 @@ import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.particle.ParticleTypes;
@@ -234,16 +236,16 @@ public class SimonGameScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (game == null) return super.mouseClicked(mouseX, mouseY, button);
-        if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
+    public boolean mouseClicked(Click click, boolean doubled) {
+        if (game == null) return super.mouseClicked(click, doubled);
+        if (click.button() != 0) return super.mouseClicked(click, doubled);
 
         if (game.getState() == SimonGame.State.SHOWING) {
             return false;
         }
 
-        int mx = (int) mouseX;
-        int my = (int) mouseY;
+        int mx = (int) click.x();
+        int my = (int) click.y();
 
         for (int i = 0; i < 5; i++) {
             int x = centerX + i * (blockSize + spacing);
@@ -268,23 +270,23 @@ public class SimonGameScreen extends Screen {
                         GameRecords.getInstance().setBestScore("simon", bestScore);
                     }
                 }
-                return handled || super.mouseClicked(mouseX, mouseY, button);
+                return handled || super.mouseClicked(click, doubled);
             }
         }
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(click, doubled);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_R) {
+    public boolean keyPressed(KeyInput keyInput) {
+        if (keyInput.key() == GLFW.GLFW_KEY_R) {
             if (game != null) game.reset();
             return true;
-        } else if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+        } else if (keyInput.key() == GLFW.GLFW_KEY_ESCAPE) {
             if (this.client != null) this.client.setScreen(this.parent);
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(keyInput);
     }
 
     @Override
