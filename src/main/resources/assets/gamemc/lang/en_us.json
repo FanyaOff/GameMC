@@ -1,4 +1,7 @@
 {
+  "key.gamemc.open_screen": "Open game selection menu",
+  "category.gamemc.keys": "GameMC",
+
   "menu.gamemc.title": "Arcade games",
   "menu.gamemc.description": "More games coming soon...",
   "menu.gamemc.select": "Select game",
