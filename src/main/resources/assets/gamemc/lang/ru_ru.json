@@ -1,4 +1,7 @@
 {
+  "key.gamemc.open_screen": "Открыть выбор игры",
+  "category.gamemc.keys": "GameMC",
+
   "menu.gamemc.title": "Аркадные игры",
   "menu.gamemc.description": "Больше игр - скоро.. (я надеюсь)",
   "menu.gamemc.select": "Выберите игру",
@@ -19,7 +22,7 @@
   "game.snake.button.newgame": "Новая игра",
   "game.snake.score": "Очки: %s",
   "game.snake.length": "Длинна: %s",
-  "game.snake.best_score": "Лучшиц: %s",
+  "game.snake.best_score": "Лучший: %s",
   "game.snake.lose": "Игра окончена!",
   "game.snake.restart_hint": "Нажмите R для перезапуска"
 }
