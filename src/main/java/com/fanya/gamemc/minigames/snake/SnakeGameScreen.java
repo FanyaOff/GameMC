@@ -1,9 +1,12 @@
 package com.fanya.gamemc.minigames.snake;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTexture;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -174,10 +177,12 @@ public class SnakeGameScreen extends Screen {
         SnakeGame.Position food = game.getFood();
         Identifier foodTexture = game.getCurrentFoodTexture();
 
+        GpuTexture foodGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(foodTexture).getGlTexture();
+
         int foodSize = Math.max(1, cellSize - padding * 2);
         if (foodSize > 2) {
-            RenderSystem.setShaderTexture(0, foodTexture);
-            context.drawTexture(foodTexture,
+            RenderSystem.setShaderTexture(0, foodGpuTexture);
+            context.drawTexture(id -> RenderLayer.getGuiTextured(foodTexture),foodTexture,
                     gridOffsetX + food.x * cellSize + padding,
                     gridOffsetY + food.y * cellSize + padding,
                     0, 0,
@@ -189,13 +194,13 @@ public class SnakeGameScreen extends Screen {
             SnakeGame.Position segment = game.getSnake().get(i);
 
             Identifier texture = (i == 0) ? EMERALD : SLIME;
-
+            GpuTexture snakeGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(texture).getGlTexture();
             int segmentPadding = Math.max(1, cellSize / 12);
             int segmentSize = Math.max(1, cellSize - segmentPadding * 2);
 
             if (segmentSize > 2) {
-                RenderSystem.setShaderTexture(0, texture);
-                context.drawTexture(texture,
+                RenderSystem.setShaderTexture(0, snakeGpuTexture);
+                context.drawTexture(id -> RenderLayer.getGuiTextured(texture) ,texture,
                         gridOffsetX + segment.x * cellSize + segmentPadding,
                         gridOffsetY + segment.y * cellSize + segmentPadding,
                         0, 0,
