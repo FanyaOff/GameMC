@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "gamemc",
+  "version": "${version}",
+  "name": "GameMC",
+  "description": "Simple minecraft mod that add classic arcade games to minecraft.",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/gamemc/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.fanya.gamemc.GameMC"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  },
+  "mixins": [
+    "gamemc.mixins.json"
+  ]
+}
