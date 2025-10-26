@@ -1,0 +1,25 @@
+{
+  "menu.gamemc.title": "Аркадные игры",
+  "menu.gamemc.description": "Больше игр - скоро.. (я надеюсь)",
+  "menu.gamemc.select": "Выберите игру",
+  "menu.gamemc.menubtn": "Игры",
+
+  "menu.gamemc.button.snakegame": "Змейка",
+  "menu.gamemc.button.simon": "Саймон",
+
+  "game.simon.title": "Саймон",
+  "game.simon.button.newgame": "Новая игра",
+  "game.simon.sequence_length": "Длинна последовательности: %s",
+  "game.simon.best_score": "Лучший: %s",
+  "game.simon.lose": "Игра окончена!",
+  "game.simon.length": "Длительность: %s",
+  "game.simon.restart_hint": "Нажмите \"Новая игра\" или R для рестарта",
+
+  "game.snake.title": "Змейка",
+  "game.snake.button.newgame": "Новая игра",
+  "game.snake.score": "Очки: %s",
+  "game.snake.length": "Длинна: %s",
+  "game.snake.best_score": "Лучшиц: %s",
+  "game.snake.lose": "Игра окончена!",
+  "game.snake.restart_hint": "Нажмите R для перезапуска"
+}

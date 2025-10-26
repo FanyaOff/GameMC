@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "com.fanya.gamemc.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [],
+  "client": [
+    "GameMenuScreenMixin",
+    "TitleScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

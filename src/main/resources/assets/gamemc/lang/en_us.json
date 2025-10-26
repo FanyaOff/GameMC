@@ -1,0 +1,25 @@
+{
+  "menu.gamemc.title": "Arcade games",
+  "menu.gamemc.description": "More games coming soon...",
+  "menu.gamemc.select": "Select game",
+  "menu.gamemc.menubtn": "Games",
+
+  "menu.gamemc.button.snakegame": "Snake game",
+  "menu.gamemc.button.simon": "Simon says",
+
+  "game.simon.title": "Simon Says",
+  "game.simon.button.newgame": "New game",
+  "game.simon.sequence_length": "Sequence length: %s",
+  "game.simon.best_score": "Best: %s",
+  "game.simon.lose": "GAME OVER!",
+  "game.simon.length": "Length: %s",
+  "game.simon.restart_hint": "Press \"New Game\" or R to restart",
+
+  "game.snake.title": "Snake game",
+  "game.snake.button.newgame": "New Game",
+  "game.snake.score": "Score: %s",
+  "game.snake.length": "Length: %s",
+  "game.snake.best_score": "Best: %s",
+  "game.snake.lose": "GAME OVER!",
+  "game.snake.restart_hint": "Press R to restart"
+}

@@ -37,11 +37,6 @@ run/
 *.map
 *.lock
 
-# Generated resources
-generated/
-resources/
-assets/
-
 # Minecraft Launcher / Mod caches
 .minecraft/
 *.litemod
