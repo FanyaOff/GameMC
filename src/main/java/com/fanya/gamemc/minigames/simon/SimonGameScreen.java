@@ -3,7 +3,9 @@ package com.fanya.gamemc.minigames.simon;
 import com.fanya.gamemc.data.GameRecords;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -124,7 +126,7 @@ public class SimonGameScreen extends Screen {
             }
         });
 
-        GpuTexture gpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(NOTE_TEXTURE).getGlTexture();
+        GpuTextureView gpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(NOTE_TEXTURE).getGlTextureView();
         RenderSystem.setShaderTexture(0, gpuTexture);
 
         for (GuiNoteParticle p : guiParticles) {
@@ -132,19 +134,34 @@ public class SimonGameScreen extends Screen {
             float g = ((p.color >> 8) & 0xFF) / 255f;
             float b = (p.color & 0xFF) / 255f;
             float a = p.alpha;
-            RenderSystem.setShaderTexture(0, gpuTexture);
-            RenderSystem.setShaderColor(r, g, b, a);
 
-            context.drawTexture(id -> RenderLayer.getGuiTextured(NOTE_TEXTURE), NOTE_TEXTURE, (int)p.x, (int)p.y, 0, 0, 16, 16, 16, 16);
+            RenderSystem.setShaderTexture(0, gpuTexture);
+
+            int colorInt =
+                    ((int)(a * 255) << 24) |
+                            ((int)(r * 255) << 16) |
+                            ((int)(g * 255) << 8)  |
+                            ((int)(b * 255));
+
+            context.drawTexture(
+                    RenderPipelines.GUI_TEXTURED,
+                    NOTE_TEXTURE,
+                    (int)p.x,
+                    (int)p.y,
+                    0, 0,
+                    16, 16,
+                    16, 16,
+                    colorInt
+            );
         }
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+
 
     }
 
     private void drawNoteBlock(DrawContext context, int x, int y, int size, int index) {
-        GpuTexture gpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(NOTE_BLOCK_TEXTURE).getGlTexture();
+        GpuTextureView gpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(NOTE_BLOCK_TEXTURE).getGlTextureView();
         RenderSystem.setShaderTexture(0, gpuTexture);
-        context.drawTexture(id -> RenderLayer.getGuiTextured(NOTE_BLOCK_TEXTURE),NOTE_BLOCK_TEXTURE, x, y, 0, 0, size, size, size, size);
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, NOTE_BLOCK_TEXTURE, x, y, 0, 0, size, size, size, size);
 
         if (game != null && game.getState() == SimonGame.State.SHOWING) {
             int showing = game.getCurrentlyShowingIndex();
@@ -184,21 +201,20 @@ public class SimonGameScreen extends Screen {
     }
 
     private void drawInfo(DrawContext context) {
-        Text title = Text.translatable("game.simon.title");
-        Text seqLen = Text.translatable("game.simon.sequence_length", (game != null ? game.getSequenceLength() : 0));
+        int panelY = 20;
+        int centerX = this.width / 2;
+        int panelWidth = 200;
 
-        int panelHeight = 36;
-        int panelY = Math.max(8, centerY - panelHeight - 8);
-        int panelX = centerX;
-        int panelW = blockSize * 5 + spacing * 4;
+        String titleStr = this.textRenderer.trimToWidth(Text.translatable("game.simon.title").getString(), panelWidth);
+        context.drawText(this.textRenderer, Text.literal(titleStr), centerX - this.textRenderer.getWidth(titleStr) / 2, panelY, 0xFF00FFFF, true);
 
-        context.fillGradient(panelX - 6, panelY - 6, panelX + panelW + 6, panelY + panelHeight + 6, 0xD0101010, 0xE0202020);
-        context.drawTextWithShadow(this.textRenderer, title, panelX + 6, panelY - 2, 0xFFFFFF);
-        context.drawTextWithShadow(this.textRenderer, seqLen, panelX + panelW - this.textRenderer.getWidth(seqLen) - 6, panelY + 12, 0xFFD700);
+        String seqStr = this.textRenderer.trimToWidth(Text.translatable("game.simon.sequence_length", game != null ? game.getSequenceLength() : 0).getString(), panelWidth);
+        context.drawText(this.textRenderer, Text.literal(seqStr), centerX - this.textRenderer.getWidth(seqStr) / 2, panelY + 15, 0xFFAAAAAA, true);
 
-        Text bestText = Text.translatable("game.simon.best_score", bestScore);
-        context.drawTextWithShadow(this.textRenderer, bestText, panelX + panelW - this.textRenderer.getWidth(bestText) - 6, panelY - 2, 0x87CEEB);
+        String bestStr = this.textRenderer.trimToWidth(Text.translatable("game.simon.best_score", bestScore).getString(), panelWidth);
+        context.drawText(this.textRenderer, Text.literal(bestStr), centerX - this.textRenderer.getWidth(bestStr) / 2, panelY + 30, 0xFFAAAAAA, true);
     }
+
 
     private void drawGameOver(DrawContext context) {
         int boxW = 260;
@@ -210,11 +226,11 @@ public class SimonGameScreen extends Screen {
 
         int centerX = bx + boxW / 2;
         int y = by + 18;
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("game.simon.lose"), centerX, y, 0xFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("game.simon.lose"), centerX, y, 0xFFFFFFFF);
         y += 22;
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("game.simon.length", (game != null ? game.getSequenceLength() - 1 : 0)), centerX, y, 0xFFFF00);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("game.simon.length", (game != null ? game.getSequenceLength() - 1 : 0)), centerX, y, 0xFFFFFF00);
         y += 22;
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("game.simon.restart_hint"), centerX, y, 0xCCCCCC);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("game.simon.restart_hint"), centerX, y, 0xFFCCCCCC);
     }
 
     @Override

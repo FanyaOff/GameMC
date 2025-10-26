@@ -2,7 +2,9 @@ package com.fanya.gamemc.minigames.snake;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -11,6 +13,7 @@ import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
+import org.joml.Matrix3x2f;
 import org.lwjgl.glfw.GLFW;
 import com.fanya.gamemc.data.GameRecords;
 
@@ -177,12 +180,12 @@ public class SnakeGameScreen extends Screen {
         SnakeGame.Position food = game.getFood();
         Identifier foodTexture = game.getCurrentFoodTexture();
 
-        GpuTexture foodGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(foodTexture).getGlTexture();
+        GpuTextureView foodGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(foodTexture).getGlTextureView();
 
         int foodSize = Math.max(1, cellSize - padding * 2);
         if (foodSize > 2) {
             RenderSystem.setShaderTexture(0, foodGpuTexture);
-            context.drawTexture(id -> RenderLayer.getGuiTextured(foodTexture),foodTexture,
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, foodTexture,
                     gridOffsetX + food.x * cellSize + padding,
                     gridOffsetY + food.y * cellSize + padding,
                     0, 0,
@@ -194,13 +197,13 @@ public class SnakeGameScreen extends Screen {
             SnakeGame.Position segment = game.getSnake().get(i);
 
             Identifier texture = (i == 0) ? EMERALD : SLIME;
-            GpuTexture snakeGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(texture).getGlTexture();
+            GpuTextureView snakeGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(texture).getGlTextureView();
             int segmentPadding = Math.max(1, cellSize / 12);
             int segmentSize = Math.max(1, cellSize - segmentPadding * 2);
 
             if (segmentSize > 2) {
                 RenderSystem.setShaderTexture(0, snakeGpuTexture);
-                context.drawTexture(id -> RenderLayer.getGuiTextured(texture) ,texture,
+                context.drawTexture(RenderPipelines.GUI_TEXTURED, texture,
                         gridOffsetX + segment.x * cellSize + segmentPadding,
                         gridOffsetY + segment.y * cellSize + segmentPadding,
                         0, 0,
@@ -234,39 +237,36 @@ public class SnakeGameScreen extends Screen {
 
         String scoreText = Text.translatable("game.snake.score", game.getScore()).getString();
         context.drawTextWithShadow(this.textRenderer, scoreText,
-                gridOffsetX + 5, textY1, 0xFFD700);
+                gridOffsetX + 5, textY1, 0xFFFFD700);
 
         String lengthText = Text.translatable("game.snake.length", game.getSnake().size()).getString();
         context.drawTextWithShadow(this.textRenderer, lengthText,
-                gridOffsetX + 5, textY2, 0x00FF00);
+                gridOffsetX + 5, textY2, 0xFF00FF00);
 
         String bestText = Text.translatable("game.snake.best_score", bestScore).getString();
-
         float scale = Math.max(1.0f, cellSize / 18f);
 
-        float centerX = gridOffsetX + panelWidth / 2f;
-        float centerY = panelY + panelHeight / 2f - (this.textRenderer.fontHeight * scale) / 2f;
+        int textWidth = (int)(this.textRenderer.getWidth(bestText) * scale);
+        int textHeight = (int)(this.textRenderer.fontHeight * scale);
 
-        context.getMatrices().push();
-        context.getMatrices().translate(centerX, centerY, 0);
-        context.getMatrices().scale(scale, scale, 1f);
+        float x = gridOffsetX + panelWidth / 2f - textWidth / 2f;
+        float y = panelY + panelHeight / 2f - textHeight / 2f;
 
-        int textWidth = this.textRenderer.getWidth(bestText);
-        context.drawTextWithShadow(
+        context.drawText(
                 this.textRenderer,
-                bestText,
-                -textWidth / 2,  // центрируем по X
-                0,
-                0x87CEEB
+                Text.literal(bestText),
+                (int)x,
+                (int)y,
+                0xFF87CEEB,
+                true
         );
-        context.getMatrices().pop();
 
         String controls = "WASD | R";
         int controlsWidth = this.textRenderer.getWidth(controls);
         if (controlsWidth < panelWidth - 60) {
             context.drawTextWithShadow(this.textRenderer, controls,
                     gridOffsetX + panelWidth - controlsWidth,
-                    panelY + panelHeight / 2 - textSize / 2, 0xAAAAAA);
+                    panelY + panelHeight / 2 - textSize / 2, 0xFFAAAAAA);
         }
     }
 
@@ -283,23 +283,23 @@ public class SnakeGameScreen extends Screen {
 
         Text gameOverText = Text.translatable("game.snake.lose");
         context.drawCenteredTextWithShadow(this.textRenderer, gameOverText,
-                centerX, centerY - lineHeight * 2, 0xFFFFFF);
+                centerX, centerY - lineHeight * 2, 0xFFFFFFFF);
 
         Text scoreText = Text.translatable("game.snake.score", game.getScore());
         context.drawCenteredTextWithShadow(this.textRenderer, scoreText,
-                centerX, centerY - lineHeight / 2, 0xFFFF00);
+                centerX, centerY - lineHeight / 2, 0xFFFFFF00);
 
         Text lengthText = Text.translatable("game.snake.length", game.getSnake().size());
         context.drawCenteredTextWithShadow(this.textRenderer, lengthText,
-                centerX, centerY + lineHeight / 2, 0x00FF00);
+                centerX, centerY + lineHeight / 2, 0xFF00FF00);
 
         Text bestScoreText = Text.translatable("game.snake.best_score", bestScore);
         context.drawCenteredTextWithShadow(this.textRenderer, bestScoreText,
-                centerX, centerY + lineHeight * 3, 0x87CEEB);
+                centerX, centerY + lineHeight * 3, 0xFF87CEEB);
 
         Text restartText = Text.translatable("game.snake.restart_hint");
         context.drawCenteredTextWithShadow(this.textRenderer, restartText,
-                centerX, centerY + lineHeight * 2, 0xCCCCCC);
+                centerX, centerY + lineHeight * 2, 0xFFCCCCCC);
     }
 
     @Override

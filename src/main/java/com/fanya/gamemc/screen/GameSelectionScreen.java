@@ -73,6 +73,7 @@ public class GameSelectionScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.renderPanoramaBackground(context, delta);
+
         context.fillGradient(0, 0, this.width, this.height, 0xC0101010, 0xD0101010);
 
         context.fill(panelX + 4, panelY + 4, panelX + panelWidth + 4, panelY + panelHeight + 4, 0x80000000);
@@ -83,9 +84,15 @@ public class GameSelectionScreen extends Screen {
         context.fill(panelX, panelY, panelX + 2, panelY + panelHeight, 0xFF1a8c99);
         context.fill(panelX + panelWidth - 2, panelY, panelX + panelWidth, panelY + panelHeight, 0xFF1a8c99);
 
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("menu.gamemc.title"), this.width / 2, panelY + 15, 0x00FFFF);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("menu.gamemc.description"), this.width / 2, panelY + 30, 0xAAAAAA);
         context.fill(panelX + 40, panelY + 45, panelX + panelWidth - 40, panelY + 47, 0x60FFFFFF);
+
+        String title = this.textRenderer.trimToWidth(Text.translatable("menu.gamemc.title").getString(), panelWidth);
+        context.drawText(this.textRenderer, Text.literal(title),
+                this.width / 2 - this.textRenderer.getWidth(title) / 2, panelY + 15, 0xFF00FFFF, true);
+
+        String desc = this.textRenderer.trimToWidth(Text.translatable("menu.gamemc.description").getString(), panelWidth);
+        context.drawText(this.textRenderer, Text.literal(desc),
+                this.width / 2 - this.textRenderer.getWidth(desc) / 2, panelY + 30, 0xFFAAAAAA, true);
 
         MinecraftClient mc = MinecraftClient.getInstance();
         double sf = mc.getWindow().getScaleFactor();
@@ -93,7 +100,7 @@ public class GameSelectionScreen extends Screen {
         int scY = (int) (mc.getWindow().getHeight() - (listAreaY + listAreaHeight) * sf);
         int scW = (int) (listAreaWidth * sf);
         int scH = (int) (listAreaHeight * sf);
-        RenderSystem.enableScissor(scX, scY, scW, scH);
+        RenderSystem.enableScissorForRenderTypeDraws(scX, scY, scW, scH);
 
         int y = listAreaY - scrollOffset;
         for (ButtonWidget btn : gameButtons) {
@@ -104,10 +111,11 @@ public class GameSelectionScreen extends Screen {
             }
             y += buttonHeight + buttonGap;
         }
-        RenderSystem.disableScissor();
+        RenderSystem.disableScissorForRenderTypeDraws();
 
         backButton.render(context, mouseX, mouseY, delta);
 
+        // скроллбар
         int totalBtnsHeight = (buttonHeight + buttonGap) * gameButtons.size();
         if (totalBtnsHeight > listAreaHeight) {
             int barX = listAreaX + listAreaWidth + 2;
@@ -121,6 +129,7 @@ public class GameSelectionScreen extends Screen {
             context.fill(barX, handleY, barX + barWidth, handleY + handleHeight, 0xFF888888);
         }
     }
+
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
