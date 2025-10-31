@@ -32,7 +32,6 @@ desktop.ini
 # Fabric / Forge / Minecraft
 run/
 *.class
-*.jar
 *.zip
 *.map
 *.lock
