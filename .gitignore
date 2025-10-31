@@ -43,7 +43,3 @@ run/
 *.mca
 *.mcr
 *.dat
-
-# Gradle wrapper
-gradle-wrapper.jar
-gradle-wrapper.properties
