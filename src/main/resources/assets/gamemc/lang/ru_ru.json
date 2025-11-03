@@ -12,7 +12,7 @@
 
   "game.simon.title": "Саймон",
   "game.simon.button.newgame": "Новая игра",
-  "game.simon.sequence_length": "Длинна последовательности: %s",
+  "game.simon.sequence_length": "Длина последовательности: %s",
   "game.simon.best_score": "Лучший: %s",
   "game.simon.lose": "Игра окончена!",
   "game.simon.length": "Длительность: %s",
@@ -21,8 +21,14 @@
   "game.snake.title": "Змейка",
   "game.snake.button.newgame": "Новая игра",
   "game.snake.score": "Очки: %s",
-  "game.snake.length": "Длинна: %s",
+  "game.snake.length": "Длина: %s",
   "game.snake.best_score": "Лучший: %s",
   "game.snake.lose": "Игра окончена!",
-  "game.snake.restart_hint": "Нажмите R для перезапуска"
+  "game.snake.restart_hint": "Нажмите R для перезапуска",
+  "game.snake.won": "ВЫ ВЫИГРАЛИ!",
+  "game.snake.button.select_size": "Размер поля",
+  "game.snake.size_select.title": "Выберите размер поля",
+  "game.snake.button.small": "15 × 10 (Маленькое)",
+  "game.snake.button.medium": "25 × 18 (Среднее)",
+  "game.snake.button.big": "35 × 25 (Большое)"
 }
