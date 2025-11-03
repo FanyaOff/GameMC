@@ -8,6 +8,7 @@ import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
@@ -200,9 +201,9 @@ public class Game2048Screen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyInput input) {
         if (game.getState() == Game2048.State.RUNNING || game.getState() == Game2048.State.PAUSED) {
-            switch (keyCode) {
+            switch (input.getKeycode()) {
                 case GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_LEFT -> game.move(-1);
                 case GLFW.GLFW_KEY_D, GLFW.GLFW_KEY_RIGHT -> game.move(1);
                 case GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_DOWN -> game.dropStep();
@@ -215,7 +216,7 @@ public class Game2048Screen extends Screen {
             }
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override

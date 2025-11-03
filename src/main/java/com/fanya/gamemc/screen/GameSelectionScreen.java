@@ -6,6 +6,7 @@ import com.fanya.gamemc.minigames.snake.SnakeGameScreen;
 import com.fanya.gamemc.minigames.snake.SnakeSizeSelectScreen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -155,18 +156,18 @@ public class GameSelectionScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubled) {
         int y = listAreaY - scrollOffset;
         for (ButtonWidget btn : gameButtons) {
             if (y + buttonHeight > listAreaY && y < listAreaY + listAreaHeight) {
-                if (btn.mouseClicked(mouseX, mouseY, button)) return true;
+                if (btn.mouseClicked(click, doubled)) return true;
             }
             y += buttonHeight + buttonGap;
         }
-        // Клик по "Назад" отдельно
-        if (backButton.mouseClicked(mouseX, mouseY, button)) return true;
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        if (backButton.mouseClicked(click, doubled)) return true;
+
+        return super.mouseClicked(click, doubled);
     }
 
     @Override
