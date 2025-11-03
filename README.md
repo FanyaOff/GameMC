@@ -10,6 +10,14 @@ In the plans:
 
 # Changelogs:
 
+## 1.2 
+
+**Changes:**
+
+* Added new game - **2048: Tower**
+
+**Read more about the game below**
+
 ## 1.1 – Snake Minigame Update
 
 **Changes & Features:**
@@ -48,3 +56,9 @@ Classic snake game
 ## Simon says
 A memory game where your task is to memorize the number of activation sequences of musical blocks, the further it gets, the more difficult it becomes.
 <img width="891" height="628" alt="image" src="https://github.com/user-attachments/assets/8395995e-aaa6-4c1e-84f7-e96e11a6319f" />
+
+## 2048: Tower
+
+A block-merging puzzle game inspired by 2048. Drop ore blocks from the top and combine them to reach higher-value ores. The game blends 2048 logic with Tetris-like vertical dropping, creating a new strategic puzzle experience.
+
+<img width="1920" height="983" alt="image" src="https://github.com/user-attachments/assets/ba20082d-5fff-459f-8af9-a99534b1f9df" />
