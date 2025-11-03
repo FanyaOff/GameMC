@@ -1,5 +1,6 @@
 package com.fanya.gamemc.screen;
 
+import com.fanya.gamemc.minigames._2048.Game2048Screen;
 import com.fanya.gamemc.minigames.simon.SimonGameScreen;
 import com.fanya.gamemc.minigames.snake.SnakeGameScreen;
 import com.fanya.gamemc.minigames.snake.SnakeSizeSelectScreen;
@@ -57,6 +58,11 @@ public class GameSelectionScreen extends Screen {
         gameButtons.add(ButtonWidget.builder(
                 Text.translatable("menu.gamemc.button.simon"),
                 button -> setScreenIfPresent(new SimonGameScreen(this))
+        ).dimensions(centerX, 0, buttonWidth, buttonHeight).build());
+
+        gameButtons.add(ButtonWidget.builder(
+                Text.translatable("menu.gamemc.button.2048"),
+                button -> setScreenIfPresent(new Game2048Screen(this))
         ).dimensions(centerX, 0, buttonWidth, buttonHeight).build());
 
         int backBtnX = this.width / 2 - buttonWidth / 2;
