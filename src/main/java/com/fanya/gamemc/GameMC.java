@@ -25,10 +25,10 @@ public class GameMC implements ClientModInitializer {
         LOGGER.info("GameMC initialized!");
 
         openScreenKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.gamemc.open_screen",      // ID кейбинда (локализуется через lang-файл)
-                InputUtil.Type.KEYSYM,         // Тип ввода
-                GLFW.GLFW_KEY_HOME,            // Клавиша HOME
-                GAME_MC_CATEGORY               // Новая категория
+                "key.gamemc.open_screen",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_HOME,
+                GAME_MC_CATEGORY
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

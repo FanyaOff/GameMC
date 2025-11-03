@@ -2,6 +2,7 @@ package com.fanya.gamemc.screen;
 
 import com.fanya.gamemc.minigames.simon.SimonGameScreen;
 import com.fanya.gamemc.minigames.snake.SnakeGameScreen;
+import com.fanya.gamemc.minigames.snake.SnakeSizeSelectScreen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Click;
@@ -50,7 +51,7 @@ public class GameSelectionScreen extends Screen {
         gameButtons.clear();
         gameButtons.add(ButtonWidget.builder(
                 Text.translatable("menu.gamemc.button.snakegame"),
-                button -> setScreenIfPresent(new SnakeGameScreen(this))
+                button -> setScreenIfPresent(new SnakeSizeSelectScreen(this))
         ).dimensions(centerX, 0, buttonWidth, buttonHeight).build());
 
         gameButtons.add(ButtonWidget.builder(
@@ -157,7 +158,7 @@ public class GameSelectionScreen extends Screen {
             }
             y += buttonHeight + buttonGap;
         }
-        // Клик по "Назад" отдельно
+
         if (backButton.mouseClicked(click, doubled)) return true;
 
         return super.mouseClicked(click, doubled);

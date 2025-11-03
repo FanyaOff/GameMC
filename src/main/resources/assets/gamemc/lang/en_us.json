@@ -24,5 +24,11 @@
   "game.snake.length": "Length: %s",
   "game.snake.best_score": "Best: %s",
   "game.snake.lose": "GAME OVER!",
-  "game.snake.restart_hint": "Press R to restart"
+  "game.snake.restart_hint": "Press R to restart",
+  "game.snake.won": "You won the snake game!",
+  "game.snake.button.select_size": "Grid Size",
+  "game.snake.size_select.title": "Select grid size",
+  "game.snake.button.small": "15 × 10 (Small)",
+  "game.snake.button.medium": "25 × 18 (Medium)",
+  "game.snake.button.big": "35 × 25 (Big)"
 }
