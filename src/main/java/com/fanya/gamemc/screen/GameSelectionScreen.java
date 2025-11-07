@@ -164,7 +164,7 @@ public class GameSelectionScreen extends Screen {
             }
             y += buttonHeight + buttonGap;
         }
-        // Клик по "Назад" отдельно
+
         if (backButton.mouseClicked(click, doubled)) return true;
 
         return super.mouseClicked(click, doubled);
