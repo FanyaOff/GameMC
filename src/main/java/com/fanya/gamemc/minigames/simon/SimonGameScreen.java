@@ -2,28 +2,22 @@ package com.fanya.gamemc.minigames.simon;
 
 import com.fanya.gamemc.data.GameRecords;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTexture;
-import com.mojang.blaze3d.textures.GpuTextureView;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.screen.ScreenTexts;
+import net.minecraft.client.texture.MissingSprite;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
-import static com.fanya.gamemc.minigames.simon.GuiNoteParticle.NOTE_TEXTURE;
-
 public class SimonGameScreen extends Screen {
 
-    private static final Identifier NOTE_BLOCK_TEXTURE = Identifier.ofVanilla("textures/block/note_block.png");
+    private static final Identifier COPPER_LAMP_TEXTURE = Identifier.ofVanilla("textures/block/copper_bulb.png");
+    private static final Identifier COPPER_LAMP_LIT_TEXTURE = Identifier.ofVanilla("textures/block/copper_bulb_lit.png");
 
     private final Screen parent;
     private SimonGame game;
@@ -34,8 +28,10 @@ public class SimonGameScreen extends Screen {
     private int blockSize;
     private int spacing;
 
-    private final List<GuiNoteParticle> guiParticles = new java.util.ArrayList<>();
     private int lastShownStep = -1;
+    private final long[] lampFlashTimes = new long[4];
+    private static final long FLASH_DURATION = 400;
+    private long lastFlashTriggerTime = 0;
 
     public SimonGameScreen(Screen parent) {
         super(Text.translatable("game.simon.title"));
@@ -44,35 +40,18 @@ public class SimonGameScreen extends Screen {
 
     @Override
     protected void init() {
-        super.init();
         bestScore = GameRecords.getInstance().getBestScore("simon");
-
-        if (game == null) {
-            game = new SimonGame(3);
-        }
+        if (game == null) game = new SimonGame(3);
 
         int buttonWidth = Math.min(90, this.width / 6);
         int buttonHeight = 16;
         int y = this.height - 28;
-        int spacingButton = 8;
 
-        this.addDrawableChild(ButtonWidget.builder(
-                        ScreenTexts.BACK,
-                        button -> {
-                            if (this.client != null) this.client.setScreen(this.parent);
-                        }
-                )
-                .dimensions(this.width / 2 - buttonWidth - spacingButton / 2, y, buttonWidth, buttonHeight)
-                .build());
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("gui.back"), b -> this.client.setScreen(parent))
+                .dimensions(this.width / 2 - buttonWidth - 4, y, buttonWidth, buttonHeight).build());
 
-        this.addDrawableChild(ButtonWidget.builder(
-                        Text.translatable("game.simon.button.newgame"),
-                        button -> {
-                            game.reset();
-                        }
-                )
-                .dimensions(this.width / 2 + spacingButton / 2, y, buttonWidth, buttonHeight)
-                .build());
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.simon.button.newgame"), b -> game.reset())
+                .dimensions(this.width / 2 + 4, y, buttonWidth, buttonHeight).build());
 
         calculateLayout();
     }
@@ -80,110 +59,91 @@ public class SimonGameScreen extends Screen {
     private void calculateLayout() {
         blockSize = Math.max(28, Math.min(64, this.width / 8));
         spacing = Math.max(6, blockSize / 6);
-        int totalWidth = blockSize * 5 + spacing * 4;
+        int totalWidth = blockSize * 4 + spacing * 3;
         centerX = (this.width - totalWidth) / 2;
         centerY = Math.max(80, (this.height / 2) - blockSize / 2);
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        guiParticles.removeIf(p -> !p.isAlive());
-        for (GuiNoteParticle p : guiParticles) {
-            p.update();
-        }
-
         super.renderPanoramaBackground(context, delta);
         context.fillGradient(0, 0, this.width, this.height, 0xB0000000, 0xC0000000);
 
-        if (game != null && game.getState() != SimonGame.State.LOST) {
-            game.update();
-        }
+        if (game != null) game.update();
 
         int pad = 6;
-        int panelWidth = blockSize * 5 + spacing * 4 + pad * 2;
+        int panelWidth = blockSize * 4 + spacing * 3 + pad * 2;
         int panelHeight = blockSize + pad * 2;
         int panelX = centerX - pad;
         int panelY = centerY - pad;
-        context.fillGradient(panelX - 2, panelY - 2, panelX + panelWidth + 2, panelY + panelHeight + 2, 0xFF1a8c99, 0xFF0d5d66);
 
+        context.fillGradient(panelX - 2, panelY - 2, panelX + panelWidth + 2, panelY + panelHeight + 2,
+                0xFF1a8c99, 0xFF0d5d66);
         context.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, 0xFF0A1A1F);
 
-        for (int i = 0; i < 5; i++) {
+        if (game.getState() == SimonGame.State.SHOWING) {
+            int activeLamp = game.getCurrentlyShowingIndex();
+            if (activeLamp >= 0 && activeLamp < 4) {
+                long now = System.currentTimeMillis();
+
+                if (lastShownStep != activeLamp ||
+                        now - lastFlashTriggerTime > game.getShowDuration() + game.getBetweenDelay() / 2) {
+
+                    lastShownStep = activeLamp;
+                    lastFlashTriggerTime = now;
+                    lampFlashTimes[activeLamp] = now; // запускаем пульсацию
+                }
+            }
+        } else {
+            lastShownStep = -1;
+        }
+
+
+
+        for (int i = 0; i < 4; i++) {
             int x = centerX + i * (blockSize + spacing);
-            int y = centerY;
-            drawNoteBlock(context, x, y, blockSize, i);
+            drawLamp(context, x, centerY, blockSize, i);
         }
 
         drawInfo(context);
 
-        if (game != null && game.getState() == SimonGame.State.LOST) {
+        if (game.getState() == SimonGame.State.LOST)
             drawGameOver(context);
-        }
 
         this.children().forEach(child -> {
-            if (child instanceof ButtonWidget button) {
-                button.render(context, mouseX, mouseY, delta);
-            }
+            if (child instanceof ButtonWidget b) b.render(context, mouseX, mouseY, delta);
         });
-
-        GpuTextureView gpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(NOTE_TEXTURE).getGlTextureView();
-        RenderSystem.setShaderTexture(0, gpuTexture);
-
-        for (GuiNoteParticle p : guiParticles) {
-            float r = ((p.color >> 16) & 0xFF) / 255f;
-            float g = ((p.color >> 8) & 0xFF) / 255f;
-            float b = (p.color & 0xFF) / 255f;
-            float a = p.alpha;
-
-            RenderSystem.setShaderTexture(0, gpuTexture);
-
-            int colorInt =
-                    ((int)(a * 255) << 24) |
-                            ((int)(r * 255) << 16) |
-                            ((int)(g * 255) << 8)  |
-                            ((int)(b * 255));
-
-            context.drawTexture(
-                    RenderPipelines.GUI_TEXTURED,
-                    NOTE_TEXTURE,
-                    (int)p.x,
-                    (int)p.y,
-                    0, 0,
-                    16, 16,
-                    16, 16,
-                    colorInt
-            );
-        }
-
-
     }
 
-    private void drawNoteBlock(DrawContext context, int x, int y, int size, int index) {
-        GpuTextureView gpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(NOTE_BLOCK_TEXTURE).getGlTextureView();
-        RenderSystem.setShaderTexture(0, gpuTexture);
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, NOTE_BLOCK_TEXTURE, x, y, 0, 0, size, size, size, size);
+    private void drawLamp(DrawContext context, int x, int y, int size, int index) {
+        boolean lit = false;
+        if (game.getState() == SimonGame.State.SHOWING) {
+            lit = (game.getCurrentlyShowingIndex() == index);
+        }
 
-        if (game != null && game.getState() == SimonGame.State.SHOWING) {
-            int showing = game.getCurrentlyShowingIndex();
-            if (showing >= 0 && showing < game.getSequence().size()) {
-                int seqIdx = game.getSequence().get(showing);
+        Identifier tex = lit ? COPPER_LAMP_LIT_TEXTURE : COPPER_LAMP_TEXTURE;
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, tex, x, y, 0, 0, size, size, size, size);
 
-                if (seqIdx == index && lastShownStep != showing) {
-                    lastShownStep = showing;
-                    int color = switch (index) {
-                        case 0 -> 0xFFFF0000; // красный
-                        case 1 -> 0xFF00FF00; // зелёный
-                        case 2 -> 0xFF0000FF; // синий
-                        case 3 -> 0xFFFFFF00; // жёлтый
-                        case 4 -> 0xFFFF00FF; // пурпурный
-                        default -> 0xFFFFFFFF;
-                    };
+        long elapsed = System.currentTimeMillis() - lampFlashTimes[index];
+        if (elapsed < FLASH_DURATION) {
+            float progress = elapsed / (float) FLASH_DURATION;
+            float alpha = 1.0f - progress;
+            float scale = 1.0f + progress * 0.5f;
+            int border = (int) (6 * scale);
 
-                    guiParticles.add(new GuiNoteParticle(x + blockSize / 2f, y, color));
-                }
-            } else {
-                lastShownStep = -1;
-            }
+            int baseColor = switch (index) {
+                case 0 -> 0xFFFF4444;
+                case 1 -> 0xFF44FF44;
+                case 2 -> 0xFF4488FF;
+                case 3 -> 0xFFFFFF44;
+                default -> 0xFFFFFFFF;
+            };
+
+            int color = ((int) (alpha * 255) << 24) | (baseColor & 0xFFFFFF);
+            context.fill(x - border, y - border, x + size + border, y, color);
+            context.fill(x - border, y + size, x + size + border, y + size + border, color);
+            context.fill(x - border, y, x, y + size, color);
+            context.fill(x + size, y, x + size + border, y + size, color);
         }
 
         int mx = (int) (this.client.mouse.getX() * this.width / this.client.getWindow().getFramebufferWidth());
@@ -192,29 +152,21 @@ public class SimonGameScreen extends Screen {
             context.fill(x, y, x + size, y + size, 0x33FFFFFF);
         }
 
-        // Рисуем рамку
         context.fill(x, y + size - 4, x + size, y + size - 3, 0xFF444444);
     }
 
-    private boolean isCurrentlyLit() {
-        return (game != null && game.getState() == SimonGame.State.SHOWING && game.getCurrentlyShowingIndex() >= 0);
-    }
-
     private void drawInfo(DrawContext context) {
-        int panelY = 20;
         int centerX = this.width / 2;
-        int panelWidth = 200;
+        int panelY = 20;
+        String title = this.textRenderer.trimToWidth(Text.translatable("game.simon.title").getString(), 200);
+        context.drawText(this.textRenderer, Text.literal(title), centerX - this.textRenderer.getWidth(title) / 2, panelY, 0xFF00FFFF, true);
 
-        String titleStr = this.textRenderer.trimToWidth(Text.translatable("game.simon.title").getString(), panelWidth);
-        context.drawText(this.textRenderer, Text.literal(titleStr), centerX - this.textRenderer.getWidth(titleStr) / 2, panelY, 0xFF00FFFF, true);
+        String seq = this.textRenderer.trimToWidth(Text.translatable("game.simon.sequence_length", game.getSequenceLength()).getString(), 200);
+        context.drawText(this.textRenderer, Text.literal(seq), centerX - this.textRenderer.getWidth(seq) / 2, panelY + 15, 0xFFAAAAAA, true);
 
-        String seqStr = this.textRenderer.trimToWidth(Text.translatable("game.simon.sequence_length", game != null ? game.getSequenceLength() : 0).getString(), panelWidth);
-        context.drawText(this.textRenderer, Text.literal(seqStr), centerX - this.textRenderer.getWidth(seqStr) / 2, panelY + 15, 0xFFAAAAAA, true);
-
-        String bestStr = this.textRenderer.trimToWidth(Text.translatable("game.simon.best_score", bestScore).getString(), panelWidth);
-        context.drawText(this.textRenderer, Text.literal(bestStr), centerX - this.textRenderer.getWidth(bestStr) / 2, panelY + 30, 0xFFAAAAAA, true);
+        String best = this.textRenderer.trimToWidth(Text.translatable("game.simon.best_score", bestScore).getString(), 200);
+        context.drawText(this.textRenderer, Text.literal(best), centerX - this.textRenderer.getWidth(best) / 2, panelY + 30, 0xFFAAAAAA, true);
     }
-
 
     private void drawGameOver(DrawContext context) {
         int boxW = 260;
@@ -224,42 +176,29 @@ public class SimonGameScreen extends Screen {
 
         context.fillGradient(bx, by, bx + boxW, by + boxH, 0xD0AA0000, 0xD0550000);
 
-        int centerX = bx + boxW / 2;
+        int cx = bx + boxW / 2;
         int y = by + 18;
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("game.simon.lose"), centerX, y, 0xFFFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("game.simon.lose"), cx, y, 0xFFFFFFFF);
         y += 22;
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("game.simon.length", (game != null ? game.getSequenceLength() - 1 : 0)), centerX, y, 0xFFFFFF00);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("game.simon.length", game.getSequenceLength() - 1), cx, y, 0xFFFFFF00);
         y += 22;
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("game.simon.restart_hint"), centerX, y, 0xFFCCCCCC);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.translatable("game.simon.restart_hint"), cx, y, 0xFFCCCCCC);
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (game == null) return super.mouseClicked(mouseX, mouseY, button);
-        if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
-
-        if (game.getState() == SimonGame.State.SHOWING) {
-            return false;
-        }
+        if (game == null || button != 0) return super.mouseClicked(mouseX, mouseY, button);
+        if (game.getState() == SimonGame.State.SHOWING) return false;
 
         int mx = (int) mouseX;
         int my = (int) mouseY;
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 4; i++) {
             int x = centerX + i * (blockSize + spacing);
             int y = centerY;
             if (mx >= x && mx <= x + blockSize && my >= y && my <= y + blockSize) {
                 boolean handled = game.clickButton(i);
-
-                int color = switch (i) {
-                    case 0 -> 0xFFFF0000;
-                    case 1 -> 0xFF00FF00;
-                    case 2 -> 0xFF0000FF;
-                    case 3 -> 0xFFFFFF00;
-                    case 4 -> 0xFFFF00FF;
-                    default -> 0xFFFFFFFF;
-                };
-                guiParticles.add(new GuiNoteParticle(x + blockSize / 2f, y, color));
+                lampFlashTimes[i] = System.currentTimeMillis();
 
                 if (game.getState() == SimonGame.State.LOST) {
                     int score = Math.max(0, game.getSequenceLength() - 1);
@@ -271,17 +210,16 @@ public class SimonGameScreen extends Screen {
                 return handled || super.mouseClicked(mouseX, mouseY, button);
             }
         }
-
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (keyCode == GLFW.GLFW_KEY_R) {
-            if (game != null) game.reset();
+            game.reset();
             return true;
         } else if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
-            if (this.client != null) this.client.setScreen(this.parent);
+            this.client.setScreen(parent);
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
