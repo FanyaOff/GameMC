@@ -8,7 +8,6 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.KeyboardInput;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.screen.ScreenTexts;
@@ -21,14 +20,7 @@ import net.minecraft.sound.SoundEvents;
 import org.lwjgl.glfw.GLFW;
 import com.fanya.gamemc.data.GameRecords;
 
-import java.util.List;
 
-/**
- * Экран для игры в змейку.
- * - Добавлены кнопки выбора размера поля: Small / Medium / Large
- * - При старте игры создаётся SnakeGame(selectedWidth, selectedHeight)
- * - Подписка на onFoodEaten для проигрывания звука
- */
 public class SnakeGameScreen extends Screen {
     private int bestScore;
     private final Screen parent;
@@ -220,7 +212,6 @@ public class SnakeGameScreen extends Screen {
         if (food != null && foodTexture != null) {
             try {
                 GpuTextureView foodGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(foodTexture).getGlTextureView();
-
                 int foodSize = Math.max(1, cellSize - padding * 2);
                 if (foodSize > 2) {
                     RenderSystem.setShaderTexture(0, foodGpuTexture);
@@ -231,13 +222,15 @@ public class SnakeGameScreen extends Screen {
                             foodSize, foodSize,
                             foodSize, foodSize);
                 }
-            } catch (Exception e) {
-
-            }
+            } catch (Exception ignored) { }
         }
 
+        long now = System.currentTimeMillis();
+        float t = Math.min(1f, (now - game.getLastMoveTime()) / (float) game.getMoveDelay());
+
         for (int i = 0; i < game.getSnake().size(); i++) {
-            SnakeGame.Position segment = game.getSnake().get(i);
+            SnakeGame.RenderSegment segment = game.getSnake().get(i);
+            segment.updatePosition(t);
 
             Identifier texture = (i == 0) ? EMERALD : SLIME;
             GpuTextureView snakeGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(texture).getGlTextureView();
@@ -247,14 +240,15 @@ public class SnakeGameScreen extends Screen {
             if (segmentSize > 2) {
                 RenderSystem.setShaderTexture(0, snakeGpuTexture);
                 context.drawTexture(RenderPipelines.GUI_TEXTURED, texture,
-                        gridOffsetX + segment.x * cellSize + segmentPadding,
-                        gridOffsetY + segment.y * cellSize + segmentPadding,
+                        gridOffsetX + (int)(segment.x * cellSize) + segmentPadding,
+                        gridOffsetY + (int)(segment.y * cellSize) + segmentPadding,
                         0, 0,
                         segmentSize, segmentSize,
                         segmentSize, segmentSize);
             }
         }
     }
+
 
     private void drawInfoPanel(DrawContext context) {
         int panelHeight = Math.max(24, Math.min(32, cellSize + 8));
