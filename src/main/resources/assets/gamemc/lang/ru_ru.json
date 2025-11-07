@@ -9,6 +9,7 @@
 
   "menu.gamemc.button.snakegame": "Змейка",
   "menu.gamemc.button.simon": "Саймон",
+  "menu.gamemc.button.2048": "2048: Tower",
 
   "game.simon.title": "Саймон",
   "game.simon.button.newgame": "Новая игра",
@@ -32,22 +33,21 @@
   "game.snake.button.medium": "25 × 18 (Среднее)",
   "game.snake.button.big": "35 × 25 (Большое)",
 
-  "game.snake.info.title": "2048: Башня",
-  "game.snake.info.score": "Счёт: %s",
-  "game.snake.info.best": "Рекорд: %s",
-  "game.snake.info.controls": "Управление:",
-  "game.snake.info.left": "← / A — влево",
-  "game.snake.info.right": "→ / D — вправо",
-  "game.snake.info.down": "↓ / S — ускорить",
-  "game.snake.info.drop": "Пробел — уронить",
-  "game.snake.info.restart": "R — перезапуск",
-  "game.snake.info.back": "Назад",
-  "game.snake.info.new_game": "Новая игра",
-  "game.snake.info.pause": "Пауза",
-  "game.snake.info.resume": "Продолжить",
-  "game.snake.info.game_over": "Игра окончена",
-  "game.snake.info.victory": "Вы выиграли!",
-  "game.snake.info.paused": "На паузе",
-  "menu.gamemc.button.2048": "2048: Башня"
-
+  "game.2048.title": "2048: Башня",
+  "game.2048.info.back": "Назад",
+  "game.2048.info.new_game": "Новая игра",
+  "game.2048.info.pause": "Пауза",
+  "game.2048.info.resume": "Продолжить",
+  "game.2048.info.score": "Очки: %s",
+  "game.2048.info.best": "Лучший результат: %s",
+  "game.2048.info.controls": "Управление:",
+  "game.2048.info.left": "← / A — Влево",
+  "game.2048.info.right": "→ / D — Вправо",
+  "game.2048.info.down": "↓ / S — Быстро вниз",
+  "game.2048.info.drop": "Пробел — Мгновенное падение",
+  "game.2048.info.restart": "R — Перезапуск",
+  "game.2048.info.paused": "Пауза",
+  "game.2048.info.victory": "Вы победили!",
+  "game.2048.info.game_over": "Игра окончена!",
+  "game.2048.info.keypause": "P — Пауза"
 }

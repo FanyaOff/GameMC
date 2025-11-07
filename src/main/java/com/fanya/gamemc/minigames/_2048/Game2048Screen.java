@@ -64,19 +64,19 @@ public class Game2048Screen extends Screen {
         int startX = (this.width - totalBtnWidth) / 2;
         int btnY = 3;
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.snake.info.back"), b -> {
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.2048.info.back"), b -> {
             if (client != null) client.setScreen(parent);
         }).dimensions(startX, btnY, btnWidth, btnHeight).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.snake.info.new_game"), b -> {
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.2048.info.new_game"), b -> {
             game.reset();
         }).dimensions(startX + btnWidth + spacingBtn, btnY, btnWidth, btnHeight).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.snake.info.pause"), b -> {
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.2048.info.pause"), b -> {
             if (game != null) game.togglePause();
             b.setMessage(game.getState() == Game2048.State.PAUSED
-                    ? Text.translatable("game.snake.info.resume")
-                    : Text.translatable("game.snake.info.pause"));
+                    ? Text.translatable("game.2048.info.resume")
+                    : Text.translatable("game.2048.info.pause"));
         }).dimensions(startX + 2 * (btnWidth + spacingBtn), btnY, btnWidth, btnHeight).build());
 
         playX = startX;
@@ -119,23 +119,23 @@ public class Game2048Screen extends Screen {
 
         if (game.getState() == Game2048.State.GAMEOVER) {
             context.fill(playX, playY, playX + playWidth, playY + playHeight, 0xAAFF0000);
-            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.snake.info.game_over"),
+            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.2048.info.game_over"),
                     playX + playWidth / 2, playY + playHeight / 2 - 10, 0xFFFFFFFF);
-            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.snake.info.score", game.getScore()),
+            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.2048.info.score", game.getScore()),
                     playX + playWidth / 2, playY + playHeight / 2 + 10, 0xFFFFFF00);
         }
 
         if (game.getState() == Game2048.State.PAUSED) {
             context.fill(playX, playY, playX + playWidth, playY + playHeight, 0xAA000000); // чёрное полупрозрачное
-            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.snake.info.paused"),
+            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.2048.info.paused"),
                     playX + playWidth / 2, playY + playHeight / 2, 0xFFFFFFFF);
         }
 
         if (game.getState() == Game2048.State.VICTORY) {
             context.fill(playX, playY, playX + playWidth, playY + playHeight, 0xAA00FF00); // зеленое затемнение
-            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.snake.info.victory"),
+            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.2048.info.victory"),
                     playX + playWidth / 2, playY + playHeight / 2 - 10, 0xFFFFFFFF);
-            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.snake.info.score", game.getScore()),
+            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.2048.info.score", game.getScore()),
                     playX + playWidth / 2, playY + playHeight / 2 + 10, 0xFFFFFF00);
         }
 
@@ -162,32 +162,32 @@ public class Game2048Screen extends Screen {
 
         int y = playY;
 
-        context.drawText(textRenderer, Text.translatable("game.snake.info.title"), panelX, y, 0xFF00FFFF, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.title"), panelX, y, 0xFF00FFFF, false);
         y += 20;
 
-        context.drawText(textRenderer, Text.translatable("game.snake.info.score", game.getScore()), panelX, y, 0xFFFFFFFF, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.score", game.getScore()), panelX, y, 0xFFFFFFFF, false);
         y += 16;
 
         int best = GameRecords.getInstance().getBestScore("2048_blocks");
-        context.drawText(textRenderer, Text.translatable("game.snake.info.best", best), panelX, y, 0xFFFFFFFF, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.best", best), panelX, y, 0xFFFFFFFF, false);
         y += 30;
 
-        context.drawText(textRenderer, Text.translatable("game.snake.info.controls"), panelX, y, 0xFFAAAAAA, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.controls"), panelX, y, 0xFFAAAAAA, false);
         y += 14;
 
-        context.drawText(textRenderer, Text.translatable("game.snake.info.left"), panelX, y, 0xFFCCCCCC, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.left"), panelX, y, 0xFFCCCCCC, false);
         y += 12;
 
-        context.drawText(textRenderer, Text.translatable("game.snake.info.right"), panelX, y, 0xFFCCCCCC, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.right"), panelX, y, 0xFFCCCCCC, false);
         y += 12;
 
-        context.drawText(textRenderer, Text.translatable("game.snake.info.down"), panelX, y, 0xFFCCCCCC, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.down"), panelX, y, 0xFFCCCCCC, false);
         y += 12;
 
-        context.drawText(textRenderer, Text.translatable("game.snake.info.drop"), panelX, y, 0xFFCCCCCC, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.drop"), panelX, y, 0xFFCCCCCC, false);
         y += 12;
 
-        context.drawText(textRenderer, Text.translatable("game.snake.info.restart"), panelX, y, 0xFFCCCCCC, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.restart"), panelX, y, 0xFFCCCCCC, false);
     }
 
     private void drawGameOver(DrawContext ctx) {
