@@ -8,12 +8,15 @@ import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 public class Game2048Screen extends Screen {
+
     private static final Identifier[] BLOCK_TEXTURES = buildTextures();
+
     private static Identifier[] buildTextures() {
         Identifier[] ids = new Identifier[12];
         ids[1] = Identifier.ofVanilla("textures/block/dirt.png");
@@ -41,7 +44,7 @@ public class Game2048Screen extends Screen {
     private final int dropInterval = 50;
 
     public Game2048Screen(Screen parent) {
-        super(Text.literal("2048 Blocks"));
+        super(Text.translatable("game.2048.title"));
         this.parent = parent;
     }
 
@@ -64,26 +67,23 @@ public class Game2048Screen extends Screen {
         int startX = (this.width - totalBtnWidth) / 2;
         int btnY = 3;
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.snake.info.back"), b -> {
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.2048.info.back"), b -> {
             if (client != null) client.setScreen(parent);
         }).dimensions(startX, btnY, btnWidth, btnHeight).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.snake.info.new_game"), b -> {
-            game.reset();
-        }).dimensions(startX + btnWidth + spacingBtn, btnY, btnWidth, btnHeight).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.2048.info.new_game"), b -> game.reset())
+                .dimensions(startX + btnWidth + spacingBtn, btnY, btnWidth, btnHeight).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.snake.info.pause"), b -> {
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.2048.info.pause"), b -> {
             if (game != null) game.togglePause();
             b.setMessage(game.getState() == Game2048.State.PAUSED
-                    ? Text.translatable("game.snake.info.resume")
-                    : Text.translatable("game.snake.info.pause"));
+                    ? Text.translatable("game.2048.info.resume")
+                    : Text.translatable("game.2048.info.pause"));
         }).dimensions(startX + 2 * (btnWidth + spacingBtn), btnY, btnWidth, btnHeight).build());
 
         playX = startX;
         playY = (this.height - playHeight) / 2;
-
         panelX = playX + playWidth + 20;
-
     }
 
     @Override
@@ -119,23 +119,23 @@ public class Game2048Screen extends Screen {
 
         if (game.getState() == Game2048.State.GAMEOVER) {
             context.fill(playX, playY, playX + playWidth, playY + playHeight, 0xAAFF0000);
-            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.snake.info.game_over"),
+            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.2048.info.game_over"),
                     playX + playWidth / 2, playY + playHeight / 2 - 10, 0xFFFFFFFF);
-            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.snake.info.score", game.getScore()),
+            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.2048.info.score", game.getScore()),
                     playX + playWidth / 2, playY + playHeight / 2 + 10, 0xFFFFFF00);
         }
 
         if (game.getState() == Game2048.State.PAUSED) {
-            context.fill(playX, playY, playX + playWidth, playY + playHeight, 0xAA000000); // чёрное полупрозрачное
-            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.snake.info.paused"),
+            context.fill(playX, playY, playX + playWidth, playY + playHeight, 0xAA000000);
+            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.2048.info.paused"),
                     playX + playWidth / 2, playY + playHeight / 2, 0xFFFFFFFF);
         }
 
         if (game.getState() == Game2048.State.VICTORY) {
-            context.fill(playX, playY, playX + playWidth, playY + playHeight, 0xAA00FF00); // зеленое затемнение
-            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.snake.info.victory"),
+            context.fill(playX, playY, playX + playWidth, playY + playHeight, 0xAA00FF00);
+            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.2048.info.victory"),
                     playX + playWidth / 2, playY + playHeight / 2 - 10, 0xFFFFFFFF);
-            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.snake.info.score", game.getScore()),
+            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.2048.info.score", game.getScore()),
                     playX + playWidth / 2, playY + playHeight / 2 + 10, 0xFFFFFF00);
         }
 
@@ -147,77 +147,71 @@ public class Game2048Screen extends Screen {
         GpuTextureView view = MinecraftClient.getInstance().getTextureManager().getTexture(tex).getGlTextureView();
         RenderSystem.setShaderTexture(0, view);
         context.drawTexture(RenderPipelines.GUI_TEXTURED, tex, x, y, 0, 0, cellSize, cellSize, cellSize, cellSize);
+
         int val = 1 << lvl;
         String s = String.valueOf(val);
         int w = textRenderer.getWidth(s);
-        context.drawText(textRenderer, Text.literal(s),
-                x + (cellSize - w) / 2, y + (cellSize - 8) / 2, 0xFFFFFFFF, true);
+        context.drawText(textRenderer, Text.literal(s), x + (cellSize - w) / 2, y + (cellSize - 8) / 2, 0xFFFFFFFF, true);
     }
 
     private void drawPanel(DrawContext context) {
         int panelTop = playY - 6;
         int panelBottom = playY + playHeight + 6;
-
         context.fill(panelX - 10, panelTop, panelX + 190, panelBottom, 0x88000000);
 
         int y = playY;
-
-        context.drawText(textRenderer, Text.translatable("game.snake.info.title"), panelX, y, 0xFF00FFFF, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.title"), panelX, y, 0xFF00FFFF, false);
         y += 20;
 
-        context.drawText(textRenderer, Text.translatable("game.snake.info.score", game.getScore()), panelX, y, 0xFFFFFFFF, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.score", game.getScore()), panelX, y, 0xFFFFFFFF, false);
         y += 16;
 
         int best = GameRecords.getInstance().getBestScore("2048_blocks");
-        context.drawText(textRenderer, Text.translatable("game.snake.info.best", best), panelX, y, 0xFFFFFFFF, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.best", best), panelX, y, 0xFFFFFFFF, false);
         y += 30;
 
-        context.drawText(textRenderer, Text.translatable("game.snake.info.controls"), panelX, y, 0xFFAAAAAA, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.controls"), panelX, y, 0xFFAAAAAA, false);
         y += 14;
 
-        context.drawText(textRenderer, Text.translatable("game.snake.info.left"), panelX, y, 0xFFCCCCCC, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.left"), panelX, y, 0xFFCCCCCC, false);
         y += 12;
 
-        context.drawText(textRenderer, Text.translatable("game.snake.info.right"), panelX, y, 0xFFCCCCCC, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.right"), panelX, y, 0xFFCCCCCC, false);
         y += 12;
 
-        context.drawText(textRenderer, Text.translatable("game.snake.info.down"), panelX, y, 0xFFCCCCCC, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.down"), panelX, y, 0xFFCCCCCC, false);
         y += 12;
 
-        context.drawText(textRenderer, Text.translatable("game.snake.info.drop"), panelX, y, 0xFFCCCCCC, false);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.drop"), panelX, y, 0xFFCCCCCC, false);
         y += 12;
 
-        context.drawText(textRenderer, Text.translatable("game.snake.info.restart"), panelX, y, 0xFFCCCCCC, false);
-    }
+        context.drawText(textRenderer, Text.translatable("game.2048.info.restart"), panelX, y, 0xFFCCCCCC, false);
+        y+= 12;
 
-    private void drawGameOver(DrawContext ctx) {
-        int bx = playX + playWidth / 2 - 100;
-        int by = playY + playHeight / 2 - 40;
-        ctx.fillGradient(bx, by, bx + 200, by + 80, 0xD0AA0000, 0xD0550000);
-        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("GAME OVER"), bx + 100, by + 16, 0xFFFFFFFF);
-        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("Score: " + game.getScore()), bx + 100, by + 36, 0xFFFFFF00);
-        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("R - Restart"), bx + 100, by + 56, 0xFFCCCCCC);
+        context.drawText(textRenderer, Text.translatable("game.2048.info.keypause"), panelX, y, 0xFFCCCCCC, false);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyInput input) {
         if (game.getState() == Game2048.State.RUNNING || game.getState() == Game2048.State.PAUSED) {
-            switch (keyCode) {
+            switch (input.getKeycode()) {
                 case GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_LEFT -> game.move(-1);
                 case GLFW.GLFW_KEY_D, GLFW.GLFW_KEY_RIGHT -> game.move(1);
                 case GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_DOWN -> game.dropStep();
                 case GLFW.GLFW_KEY_SPACE -> game.hardDrop();
                 case GLFW.GLFW_KEY_R -> game.reset();
-                case GLFW.GLFW_KEY_P -> game.togglePause();
+                case GLFW.GLFW_KEY_P -> game.togglePause(); // кейбинд паузы
                 case GLFW.GLFW_KEY_ESCAPE -> {
                     if (client != null) client.setScreen(parent);
                 }
             }
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override
-    public boolean shouldPause() { return false; }
+    public boolean shouldPause() {
+        return false; // игра не ставится на паузу при открытии меню
+    }
 }
