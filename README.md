@@ -10,6 +10,24 @@ In the plans:
 
 # Changelogs:
 
+## 1.2.1
+
+**New Features & Updates**
+
+### Snake Game
+
+* **Adaptive Speed:** Snake moves faster on larger grids, slower on smaller ones.
+* **Input Queue:** Direction inputs are queued for instant, precise movement, even with rapid key presses.
+
+### Simon Game
+
+* **Sequence Display:** Visual feedback improved, changed note block to copper blob
+
+### 2048: Tower
+
+* **Pause Keybind:** Press `P` to pause/resume the game.
+* **UI Updates:** Controls, scores, and panel info now display correctly in both English and Russian.
+
 ## 1.2 
 
 **Changes:**
