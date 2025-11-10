@@ -3,11 +3,7 @@ package com.fanya.gamemc.minigames.snake;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
-import java.util.Random;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class SnakeGame {
@@ -16,9 +12,10 @@ public class SnakeGame {
     private int gridHeight;
     private final List<RenderSegment> snake;
     private Direction direction;
-    private Position food;
-    private Identifier currentFoodTexture;
-    private FoodConfig currentFoodConfig;
+
+    private final List<Position> foods = new ArrayList<>();
+    private final Map<Position, FoodConfig> foodMap = new HashMap<>();
+
     private boolean gameOver;
     private boolean gameWon;
     private int score;
@@ -45,6 +42,8 @@ public class SnakeGame {
             Identifier.ofVanilla("textures/item/cooked_beef.png")
     };
 
+    private static final Identifier ROTTEN_FLESH_TEXTURE = Identifier.ofVanilla("textures/item/rotten_flesh.png");
+
     public SnakeGame(int gridWidth, int gridHeight) {
         this.gridWidth = Math.max(5, gridWidth);
         this.gridHeight = Math.max(5, gridHeight);
@@ -56,23 +55,24 @@ public class SnakeGame {
 
     private void initDefaultFoodConfigs() {
         List<FoodConfig> list = new ArrayList<>();
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[0], 10, 20));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[1], 25, 5));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[2], 8, 15));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[3], 7, 10));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[4], 6, 8));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[5], 9, 10));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[6], 12, 6));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[7], 4, 12));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[8], 18, 4));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[9], 20, 5));
+        // Обычная еда — меньший вес
+        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[0], 10, 5, false));
+        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[1], 25, 4, false));
+        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[2], 8, 6, false));
+        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[3], 7, 5, false));
+        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[4], 6, 5, false));
+        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[5], 9, 6, false));
+        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[6], 12, 4, false));
+        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[7], 4, 5, false));
+        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[8], 18, 4, false));
+        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[9], 20, 3, false));
+
+        // Гнилая плоть — высокий вес, чаще спавнится
+        list.add(new FoodConfig(ROTTEN_FLESH_TEXTURE, -5, 20, true, 1));
+
         this.foodConfigs = list;
     }
 
-    public void setFoodConfigs(List<FoodConfig> configs) {
-        if (configs == null || configs.isEmpty()) return;
-        this.foodConfigs = new ArrayList<>(configs);
-    }
 
     public void setOnFoodEaten(Consumer<FoodConfig> callback) {
         this.onFoodEaten = callback;
@@ -98,7 +98,7 @@ public class SnakeGame {
         score = 0;
         lastMoveTime = System.currentTimeMillis();
         calculateMoveDelay();
-        spawnFood();
+        spawnFoods();
     }
 
     private void calculateMoveDelay() {
@@ -113,12 +113,13 @@ public class SnakeGame {
         if (moveDelay > baseDelay) moveDelay = baseDelay;
     }
 
+
+
     public void update() {
         if (gameOver) return;
 
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastMoveTime < moveDelay) return;
-        float t = 1f;
         lastMoveTime = currentTime;
 
         for (RenderSegment seg : snake) {
@@ -130,8 +131,8 @@ public class SnakeGame {
             direction = inputQueue.poll();
         }
 
-        RenderSegment headSeg = snake.get(0);
-        Position newHead = new Position(headSeg.gridX, headSeg.gridY);
+        RenderSegment head = snake.getFirst();
+        Position newHead = new Position(head.gridX, head.gridY);
 
         switch (direction) {
             case NORTH -> newHead.y--;
@@ -145,32 +146,49 @@ public class SnakeGame {
         if (newHead.y < 0) newHead.y = gridHeight - 1;
         if (newHead.y >= gridHeight) newHead.y = 0;
 
-        for (RenderSegment segment : snake) {
-            if (segment.gridX == newHead.x && segment.gridY == newHead.y) {
+        for (RenderSegment seg : snake) {
+            if (seg.gridX == newHead.x && seg.gridY == newHead.y) {
                 gameOver = true;
                 return;
             }
         }
 
+        snake.addFirst(new RenderSegment(newHead.x, newHead.y));
+
+        FoodConfig eaten = foodMap.get(newHead);
+        int segmentsToRemove = 1;
+
+        if (eaten != null) {
+            double multiplier = getScoreMultiplier();
+            score += (int)(eaten.getPoints() * multiplier);
+
+            if (onFoodEaten != null) {
+                try { onFoodEaten.accept(eaten); } catch (Exception ignored) {}
+            }
+
+            int extraRemove = Math.max(0, eaten.getSegmentsToRemove());
+            if (extraRemove > 0) {
+                segmentsToRemove += extraRemove;
+            } else {
+                segmentsToRemove = 0;
+            }
+
+            spawnFoods();
+        }
+
+        for (int i = 0; i < segmentsToRemove; i++) {
+            if (snake.size() > 1) {
+                snake.removeLast();
+            }
+        }
+
+
         if (snake.size() == gridWidth * gridHeight) {
             gameWon = true;
             gameOver = true;
         }
-
-        snake.add(0, new RenderSegment(newHead.x, newHead.y));
-
-        if (newHead.equals(food)) {
-            if (currentFoodConfig != null) score += currentFoodConfig.getPoints();
-            else score += 10;
-            if (onFoodEaten != null) {
-                try { onFoodEaten.accept(currentFoodConfig); }
-                catch (Exception e) { e.printStackTrace(); }
-            }
-            spawnFood();
-        } else {
-            snake.remove(snake.size() - 1);
-        }
     }
+
 
     public void setDirection(Direction newDirection) {
         Direction lastDir = inputQueue.peek() != null ? inputQueue.peek() : direction;
@@ -183,44 +201,68 @@ public class SnakeGame {
         inputQueue.add(newDirection);
     }
 
-    private void spawnFood() {
-        do {
-            food = new Position(random.nextInt(gridWidth), random.nextInt(gridHeight));
-        } while (snake.stream().anyMatch(seg -> seg.gridX == food.x && seg.gridY == food.y));
+    private void spawnFoods() {
+        clearFoods();
 
-        if (foodConfigs == null || foodConfigs.isEmpty()) {
-            currentFoodTexture = DEFAULT_FOOD_TEXTURES[random.nextInt(DEFAULT_FOOD_TEXTURES.length)];
-            currentFoodConfig = null;
-            return;
-        }
+        int gridArea = gridWidth * gridHeight;
+        int freeCells = gridArea - snake.size();
+        if (freeCells <= 0) return;
+
+        int maxSpawn = Math.min(4, freeCells);
+        int count = 1 + random.nextInt(maxSpawn);
 
         int totalWeight = foodConfigs.stream().mapToInt(FoodConfig::getWeight).sum();
-        if (totalWeight <= 0) {
-            FoodConfig fc = foodConfigs.get(random.nextInt(foodConfigs.size()));
-            currentFoodConfig = fc;
-            currentFoodTexture = fc.getTexture();
-            return;
-        }
 
-        int pick = random.nextInt(totalWeight);
-        int acc = 0;
-        for (FoodConfig fc : foodConfigs) {
-            acc += fc.getWeight();
-            if (pick < acc) {
-                currentFoodConfig = fc;
-                currentFoodTexture = fc.getTexture();
-                return;
+        for (int i = 0; i < count; i++) {
+            Position p;
+            int attempts = 0;
+
+            while (true) {
+                p = new Position(random.nextInt(gridWidth), random.nextInt(gridHeight));
+                final Position testPos = p;
+
+                boolean collidesWithSnake = snake.stream()
+                        .anyMatch(seg -> seg.gridX == testPos.x && seg.gridY == testPos.y);
+                boolean collidesWithFood = foods.contains(testPos);
+
+                if (!collidesWithSnake && !collidesWithFood) break;
+
+                attempts++;
+                if (attempts > 1000) return;
             }
-        }
 
-        FoodConfig fc = foodConfigs.get(random.nextInt(foodConfigs.size()));
-        currentFoodConfig = fc;
-        currentFoodTexture = fc.getTexture();
+            FoodConfig fc;
+            if (totalWeight <= 0) {
+                fc = foodConfigs.get(random.nextInt(foodConfigs.size()));
+            } else {
+                int pick = random.nextInt(totalWeight);
+                int acc = 0;
+                fc = foodConfigs.getFirst();
+                for (FoodConfig cand : foodConfigs) {
+                    acc += cand.getWeight();
+                    if (pick < acc) { fc = cand; break; }
+                }
+            }
+
+            foods.add(p);
+            foodMap.put(p, fc);
+        }
     }
 
+
+
+    private void clearFoods() {
+        foods.clear();
+        foodMap.clear();
+    }
+
+
     public List<RenderSegment> getSnake() { return snake; }
-    public Position getFood() { return food; }
-    public Identifier getCurrentFoodTexture() { return currentFoodTexture; }
+
+    public List<Position> getFoods() { return Collections.unmodifiableList(foods); }
+
+    public FoodConfig getFoodConfigAt(Position pos) { return foodMap.get(pos); }
+
     public boolean isGameOver() { return gameOver; }
     public int getScore() { return score; }
     public int getGridWidth() { return gridWidth; }
@@ -232,6 +274,18 @@ public class SnakeGame {
     }
     public long getLastMoveTime() { return lastMoveTime; }
     public long getMoveDelay() { return moveDelay; }
+
+
+    public double getScoreMultiplier() {
+        int area = gridWidth * gridHeight;
+        int smallThreshold = 20 * 12;
+        int mediumThreshold = 30 * 20;
+
+        if (area <= smallThreshold) return 2.0;
+        if (area <= mediumThreshold) return 1.5;
+        return 1.0;
+    }
+
 
     public static class Position {
         public int x, y;
@@ -247,13 +301,28 @@ public class SnakeGame {
         private final Identifier texture;
         private final int points;
         private final int weight;
-        public FoodConfig(Identifier texture, int points, int weight) {
-            this.texture = texture; this.points = points; this.weight = weight;
+        private final boolean isRotten;
+        private final int segmentsToRemove;
+
+        public FoodConfig(Identifier texture, int points, int weight, boolean isRotten, int segmentsToRemove) {
+            this.texture = texture;
+            this.points = points;
+            this.weight = weight;
+            this.isRotten = isRotten;
+            this.segmentsToRemove = segmentsToRemove;
         }
+
+        public FoodConfig(Identifier texture, int points, int weight, boolean isRotten) {
+            this(texture, points, weight, isRotten, 0);
+        }
+
         public Identifier getTexture() { return texture; }
         public int getPoints() { return points; }
         public int getWeight() { return weight; }
+        public boolean isRotten() { return isRotten; }
+        public int getSegmentsToRemove() { return segmentsToRemove; }
     }
+
 
     public static class RenderSegment {
         public float x, y;

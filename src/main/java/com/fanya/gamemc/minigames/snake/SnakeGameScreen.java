@@ -19,6 +19,7 @@ import net.minecraft.sound.SoundEvents;
 import org.lwjgl.glfw.GLFW;
 import com.fanya.gamemc.data.GameRecords;
 
+import java.util.List;
 
 public class SnakeGameScreen extends Screen {
     private int bestScore;
@@ -55,7 +56,8 @@ public class SnakeGameScreen extends Screen {
         calculateGridSize();
 
         game = new SnakeGame(gridWidth, gridHeight);
-        game.setOnFoodEaten((callback) -> {
+        game.setOnFoodEaten((foodConfig) -> {
+            // звук при съедании любой еды
             MinecraftClient.getInstance().getSoundManager().play(
                     PositionedSoundInstance.master(SoundEvents.ENTITY_GENERIC_EAT, 1.0F)
             );
@@ -205,23 +207,26 @@ public class SnakeGameScreen extends Screen {
 
         int padding = Math.max(1, cellSize / 10);
 
-        SnakeGame.Position food = game.getFood();
-        Identifier foodTexture = game.getCurrentFoodTexture();
-
-        if (food != null && foodTexture != null) {
-            try {
-                GpuTextureView foodGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(foodTexture).getGlTextureView();
-                int foodSize = Math.max(1, cellSize - padding * 2);
-                if (foodSize > 2) {
-                    RenderSystem.setShaderTexture(0, foodGpuTexture);
-                    context.drawTexture(RenderPipelines.GUI_TEXTURED, foodTexture,
-                            gridOffsetX + food.x * cellSize + padding,
-                            gridOffsetY + food.y * cellSize + padding,
-                            0, 0,
-                            foodSize, foodSize,
-                            foodSize, foodSize);
-                }
-            } catch (Exception ignored) { }
+        // Рисуем все еды
+        List<SnakeGame.Position> foods = game.getFoods();
+        for (SnakeGame.Position foodPos : foods) {
+            SnakeGame.FoodConfig cfg = game.getFoodConfigAt(foodPos);
+            Identifier foodTexture = cfg != null ? cfg.getTexture() : null;
+            if (foodTexture != null) {
+                try {
+                    GpuTextureView foodGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(foodTexture).getGlTextureView();
+                    int foodSize = Math.max(1, cellSize - padding * 2);
+                    if (foodSize > 2) {
+                        RenderSystem.setShaderTexture(0, foodGpuTexture);
+                        context.drawTexture(RenderPipelines.GUI_TEXTURED, foodTexture,
+                                gridOffsetX + foodPos.x * cellSize + padding,
+                                gridOffsetY + foodPos.y * cellSize + padding,
+                                0, 0,
+                                foodSize, foodSize,
+                                foodSize, foodSize);
+                    }
+                } catch (Exception ignored) { }
+            }
         }
 
         long now = System.currentTimeMillis();
