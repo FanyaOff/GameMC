@@ -10,6 +10,7 @@
   "menu.gamemc.button.snakegame": "Snake game",
   "menu.gamemc.button.simon": "Simon says",
   "menu.gamemc.button.2048": "2048: Tower",
+  "menu.gamemc.gui.update": "New version available: %s",
 
   "game.simon.title": "Simon Says",
   "game.simon.button.newgame": "New game",

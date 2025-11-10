@@ -101,10 +101,18 @@ public class Game2048 {
         playSpawnSound();
     }
     private int getRandomBlockLevel() {
+        double rawChance2 = 55;
+        double rawChance4 = 25;
+        double rawChance8 = 10;
+        double rawChance16 = 10;
+
+        double total = rawChance2 + rawChance4 + rawChance8 + rawChance16;
+
         double r = random.nextDouble();
-        if (r < 0.6) return 1;
-        if (r < 0.85) return 2;
-        if (r < 0.95) return 3;
+
+        if (r < rawChance2 / total) return 1;
+        if (r < (rawChance2 + rawChance4) / total) return 2;
+        if (r < (rawChance2 + rawChance4 + rawChance8) / total) return 3;
         return 4;
     }
 
@@ -191,6 +199,8 @@ public class Game2048 {
 
         do {
             merged = false;
+
+            // gravity
             for (int c = 0; c < COLS; c++) {
                 for (int r = ROWS - 2; r >= 0; r--) {
                     if (board[r][c] != 0 && board[r + 1][c] == 0) {
@@ -201,6 +211,7 @@ public class Game2048 {
                 }
             }
 
+            // vertical merge
             for (int c = 0; c < COLS; c++) {
                 for (int r = ROWS - 2; r >= 0; r--) {
                     if (board[r][c] != 0 && board[r][c] == board[r + 1][c]) {
@@ -214,6 +225,7 @@ public class Game2048 {
                 }
             }
 
+            // horizontal merge
             for (int r = ROWS - 1; r >= 0; r--) {
                 for (int c = 0; c < COLS - 1; c++) {
                     if (board[r][c] != 0 && board[r][c] == board[r][c + 1]) {

@@ -2,19 +2,20 @@ package com.fanya.gamemc.minigames.snake;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTextureView;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.sound.PositionedSoundInstance;
+
 import net.minecraft.screen.ScreenTexts;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.Text;
+
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
-import net.minecraft.sound.SoundCategory;
+
 import net.minecraft.sound.SoundEvents;
 import org.lwjgl.glfw.GLFW;
 import com.fanya.gamemc.data.GameRecords;
@@ -26,8 +27,8 @@ public class SnakeGameScreen extends Screen {
     private final Screen parent;
     private SnakeGame game;
 
-    private int gridWidth;
-    private int gridHeight;
+    private final int gridWidth;
+    private final int gridHeight;
 
     private static final int MIN_CELL_SIZE = 8;
     private static final int MAX_CELL_SIZE = 28;
@@ -70,7 +71,10 @@ public class SnakeGameScreen extends Screen {
 
         this.addDrawableChild(ButtonWidget.builder(
                 ScreenTexts.BACK,
-                button -> this.client.setScreen(this.parent)
+                button -> {
+                    assert this.client != null;
+                    this.client.setScreen(this.parent);
+                }
         ).dimensions(this.width / 2 - buttonWidth * 2 - spacing * 2, buttonY, buttonWidth, buttonHeight).build());
 
         this.addDrawableChild(ButtonWidget.builder(
@@ -80,7 +84,10 @@ public class SnakeGameScreen extends Screen {
 
         this.addDrawableChild(ButtonWidget.builder(
                 Text.translatable("game.snake.button.select_size"),
-                button -> this.client.setScreen(new SnakeSizeSelectScreen(parent))
+                button -> {
+                    assert this.client != null;
+                    this.client.setScreen(new SnakeSizeSelectScreen(parent));
+                }
         ).dimensions(this.width / 2 + buttonWidth + spacing * 2, buttonY, buttonWidth + 10, buttonHeight).build());
     }
 
@@ -380,7 +387,7 @@ public class SnakeGameScreen extends Screen {
                 return true;
             }
             case GLFW.GLFW_KEY_R -> {
-                if (game != null) game.reset();
+                game.reset();
                 return true;
             }
             case GLFW.GLFW_KEY_ESCAPE -> {

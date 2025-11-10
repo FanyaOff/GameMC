@@ -32,13 +32,11 @@ public class Game2048Screen extends Screen {
 
     private final Screen parent;
     private Game2048 game;
-    private int bestScore;
 
     private int playX, playY, cellSize, spacing, playWidth, playHeight;
     private int panelX;
 
     private int tickCounter = 0;
-    private final int dropInterval = 50;
 
     public Game2048Screen(Screen parent) {
         super(Text.literal("2048 Blocks"));
@@ -48,7 +46,6 @@ public class Game2048Screen extends Screen {
     @Override
     protected void init() {
         game = new Game2048();
-        bestScore = GameRecords.getInstance().getBestScore("2048_blocks");
 
         cellSize = 23;
         spacing = 3;
@@ -68,12 +65,11 @@ public class Game2048Screen extends Screen {
             if (client != null) client.setScreen(parent);
         }).dimensions(startX, btnY, btnWidth, btnHeight).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.2048.info.new_game"), b -> {
-            game.reset();
-        }).dimensions(startX + btnWidth + spacingBtn, btnY, btnWidth, btnHeight).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.2048.info.new_game"), b -> game.reset()).dimensions(startX + btnWidth + spacingBtn, btnY, btnWidth, btnHeight).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.2048.info.pause"), b -> {
             if (game != null) game.togglePause();
+            assert game != null;
             b.setMessage(game.getState() == Game2048.State.PAUSED
                     ? Text.translatable("game.2048.info.resume")
                     : Text.translatable("game.2048.info.pause"));
@@ -90,6 +86,7 @@ public class Game2048Screen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         if (game.getState() == Game2048.State.RUNNING) {
             tickCounter++;
+            int dropInterval = 50;
             if (tickCounter >= dropInterval) {
                 tickCounter = 0;
                 game.dropStep();
@@ -188,15 +185,6 @@ public class Game2048Screen extends Screen {
         y += 12;
 
         context.drawText(textRenderer, Text.translatable("game.2048.info.restart"), panelX, y, 0xFFCCCCCC, false);
-    }
-
-    private void drawGameOver(DrawContext ctx) {
-        int bx = playX + playWidth / 2 - 100;
-        int by = playY + playHeight / 2 - 40;
-        ctx.fillGradient(bx, by, bx + 200, by + 80, 0xD0AA0000, 0xD0550000);
-        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("GAME OVER"), bx + 100, by + 16, 0xFFFFFFFF);
-        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("Score: " + game.getScore()), bx + 100, by + 36, 0xFFFFFF00);
-        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("R - Restart"), bx + 100, by + 56, 0xFFCCCCCC);
     }
 
     @Override

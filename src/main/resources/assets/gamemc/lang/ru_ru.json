@@ -10,6 +10,7 @@
   "menu.gamemc.button.snakegame": "Змейка",
   "menu.gamemc.button.simon": "Саймон",
   "menu.gamemc.button.2048": "2048: Tower",
+  "menu.gamemc.gui.update": "Доступна новая версия: %s",
 
   "game.simon.title": "Саймон",
   "game.simon.button.newgame": "Новая игра",

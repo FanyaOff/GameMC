@@ -8,8 +8,8 @@ import java.util.function.Consumer;
 
 public class SnakeGame {
 
-    private int gridWidth;
-    private int gridHeight;
+    private final int gridWidth;
+    private final int gridHeight;
     private final List<RenderSegment> snake;
     private Direction direction;
 
@@ -29,20 +29,6 @@ public class SnakeGame {
 
     private final Queue<Direction> inputQueue = new ArrayDeque<>();
 
-    private static final Identifier[] DEFAULT_FOOD_TEXTURES = {
-            Identifier.ofVanilla("textures/item/apple.png"),
-            Identifier.ofVanilla("textures/item/golden_apple.png"),
-            Identifier.ofVanilla("textures/item/carrot.png"),
-            Identifier.ofVanilla("textures/item/potato.png"),
-            Identifier.ofVanilla("textures/item/beetroot.png"),
-            Identifier.ofVanilla("textures/item/melon_slice.png"),
-            Identifier.ofVanilla("textures/item/bread.png"),
-            Identifier.ofVanilla("textures/item/cookie.png"),
-            Identifier.ofVanilla("textures/item/pumpkin_pie.png"),
-            Identifier.ofVanilla("textures/item/cooked_beef.png")
-    };
-
-    private static final Identifier ROTTEN_FLESH_TEXTURE = Identifier.ofVanilla("textures/item/rotten_flesh.png");
 
     public SnakeGame(int gridWidth, int gridHeight) {
         this.gridWidth = Math.max(5, gridWidth);
@@ -55,20 +41,18 @@ public class SnakeGame {
 
     private void initDefaultFoodConfigs() {
         List<FoodConfig> list = new ArrayList<>();
-        // Обычная еда — меньший вес
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[0], 10, 5, false));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[1], 25, 4, false));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[2], 8, 6, false));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[3], 7, 5, false));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[4], 6, 5, false));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[5], 9, 6, false));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[6], 12, 4, false));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[7], 4, 5, false));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[8], 18, 4, false));
-        list.add(new FoodConfig(DEFAULT_FOOD_TEXTURES[9], 20, 3, false));
 
-        // Гнилая плоть — высокий вес, чаще спавнится
-        list.add(new FoodConfig(ROTTEN_FLESH_TEXTURE, -5, 20, true, 1));
+        list.add(new FoodConfig(Identifier.ofVanilla("textures/item/potato.png"), 1, 30));
+        list.add(new FoodConfig(Identifier.ofVanilla("textures/item/cookie.png"), 2, 25));
+        list.add(new FoodConfig(Identifier.ofVanilla("textures/item/carrot.png"), 3, 25));
+        list.add(new FoodConfig(Identifier.ofVanilla("textures/item/apple.png"), 4, 20));
+        list.add(new FoodConfig(Identifier.ofVanilla("textures/item/bread.png"), 5, 15));
+        list.add(new FoodConfig(Identifier.ofVanilla("textures/item/honey_bottle.png"), 6, 15));
+        list.add(new FoodConfig(Identifier.ofVanilla("textures/item/cooked_beef.png"), 8, 10));
+        list.add(new FoodConfig(Identifier.ofVanilla("textures/item/golden_apple.png"), 20, 5));
+
+        list.add(new FoodConfig(Identifier.ofVanilla("textures/item/poisonous_potato.png"), -3, 25));
+        list.add(new FoodConfig(Identifier.ofVanilla("textures/item/rotten_flesh.png"), -5, 10, 1));
 
         this.foodConfigs = list;
     }
@@ -267,11 +251,6 @@ public class SnakeGame {
     public int getScore() { return score; }
     public int getGridWidth() { return gridWidth; }
     public int getGridHeight() { return gridHeight; }
-    public void setGridSize(int w, int h) {
-        this.gridWidth = Math.max(5, w);
-        this.gridHeight = Math.max(5, h);
-        calculateMoveDelay();
-    }
     public long getLastMoveTime() { return lastMoveTime; }
     public long getMoveDelay() { return moveDelay; }
 
@@ -301,25 +280,22 @@ public class SnakeGame {
         private final Identifier texture;
         private final int points;
         private final int weight;
-        private final boolean isRotten;
         private final int segmentsToRemove;
 
-        public FoodConfig(Identifier texture, int points, int weight, boolean isRotten, int segmentsToRemove) {
+        public FoodConfig(Identifier texture, int points, int weight, int segmentsToRemove) {
             this.texture = texture;
             this.points = points;
             this.weight = weight;
-            this.isRotten = isRotten;
             this.segmentsToRemove = segmentsToRemove;
         }
 
-        public FoodConfig(Identifier texture, int points, int weight, boolean isRotten) {
-            this(texture, points, weight, isRotten, 0);
+        public FoodConfig(Identifier texture, int points, int weight) {
+            this(texture, points, weight, 0);
         }
 
         public Identifier getTexture() { return texture; }
         public int getPoints() { return points; }
         public int getWeight() { return weight; }
-        public boolean isRotten() { return isRotten; }
         public int getSegmentsToRemove() { return segmentsToRemove; }
     }
 
