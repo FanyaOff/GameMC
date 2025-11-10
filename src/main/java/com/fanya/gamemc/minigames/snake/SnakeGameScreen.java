@@ -8,6 +8,7 @@ import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.sound.PositionedSoundInstance;
 
 import net.minecraft.screen.ScreenTexts;
@@ -366,10 +367,10 @@ public class SnakeGameScreen extends Screen {
 
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (game == null) return super.keyPressed(keyCode, scanCode, modifiers);
+    public boolean keyPressed(KeyInput input) {
+        if (game == null) return super.keyPressed(input);
 
-        switch (keyCode) {
+        switch (input.key()) {
             case GLFW.GLFW_KEY_W, GLFW.GLFW_KEY_UP -> {
                 game.setDirection(Direction.NORTH);
                 return true;
@@ -397,7 +398,7 @@ public class SnakeGameScreen extends Screen {
                 return true;
             }
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override

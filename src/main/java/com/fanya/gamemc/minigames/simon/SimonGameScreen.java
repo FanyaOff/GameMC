@@ -2,9 +2,11 @@ package com.fanya.gamemc.minigames.simon;
 
 import com.fanya.gamemc.data.GameRecords;
 import net.minecraft.client.gl.RenderPipelines;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
@@ -186,12 +188,12 @@ public class SimonGameScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (game == null || button != 0) return super.mouseClicked(mouseX, mouseY, button);
+    public boolean mouseClicked(Click click, boolean doubled) {
+        if (game == null || click.button() != 0) return super.mouseClicked(click,doubled);
         if (game.getState() == SimonGame.State.SHOWING) return false;
 
-        int mx = (int) mouseX;
-        int my = (int) mouseY;
+        int mx = (int) click.x();
+        int my = (int) click.y();
 
         for (int i = 0; i < 4; i++) {
             int x = centerX + i * (blockSize + spacing);
@@ -207,23 +209,23 @@ public class SimonGameScreen extends Screen {
                         GameRecords.getInstance().setBestScore("simon", bestScore);
                     }
                 }
-                return handled || super.mouseClicked(mouseX, mouseY, button);
+                return handled || super.mouseClicked(click,doubled);
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(click,doubled);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_R) {
+    public boolean keyPressed(KeyInput input) {
+        if (input.key() == GLFW.GLFW_KEY_R) {
             game.reset();
             return true;
-        } else if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+        } else if (input.key() == GLFW.GLFW_KEY_ESCAPE) {
             assert this.client != null;
             this.client.setScreen(parent);
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override
