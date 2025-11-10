@@ -1,6 +1,6 @@
 ## 1.2.2
 
-**Fixes in snake game:**
+### **Fixes in snake game:**
 
 * **Score multipiers:** Score multipier now depends on grid size (2x for small, 1.5x for medium and 1x for big)
 * **Negative food:** New feature, that allows you to lose score or lose the size of your snake if you eat rotten flesh or poisonous potato
@@ -20,6 +20,8 @@
 | Poisonous Potato | -3     | 25     | 0                |
 | Rotten Flesh     | -5     | 10     | 1                |
 
+### Small changes:
+* Added update notification below game selection screen, that indicates when new version is out, based on modrinth api
 
 ## 1.2.1
 
