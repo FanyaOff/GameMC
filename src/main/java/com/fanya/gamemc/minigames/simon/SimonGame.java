@@ -8,10 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Логика мини-игры "Саймон".
- * Работает с 4 лампами, поддерживает задержку между раундами.
- */
 public class SimonGame {
     public enum State {
         SHOWING, INPUT, LOST, WAITING_NEXT_ROUND, IDLE
@@ -28,7 +24,6 @@ public class SimonGame {
 
     private final long showDuration = 500;
     private final long betweenDelay = 200;
-    private final long betweenRoundsDelay = 800;
 
     private State state = State.IDLE;
     private long waitStartTime = 0;
@@ -79,6 +74,7 @@ public class SimonGame {
     }
 
     private void updateWaiting(long now) {
+        long betweenRoundsDelay = 800;
         if (now - waitStartTime >= betweenRoundsDelay) {
             startShowing();
         }
@@ -149,9 +145,7 @@ public class SimonGame {
 
     public long getShowDuration() { return showDuration; }
     public long getBetweenDelay() { return betweenDelay; }
-    public long getBetweenRoundsDelay() { return betweenRoundsDelay; }
 
     public State getState() { return state; }
-    public List<Integer> getSequence() { return sequence; }
     public int getSequenceLength() { return sequence.size(); }
 }

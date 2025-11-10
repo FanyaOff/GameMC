@@ -35,13 +35,11 @@ public class Game2048Screen extends Screen {
 
     private final Screen parent;
     private Game2048 game;
-    private int bestScore;
 
     private int playX, playY, cellSize, spacing, playWidth, playHeight;
     private int panelX;
 
     private int tickCounter = 0;
-    private final int dropInterval = 50;
 
     public Game2048Screen(Screen parent) {
         super(Text.translatable("game.2048.title"));
@@ -51,7 +49,6 @@ public class Game2048Screen extends Screen {
     @Override
     protected void init() {
         game = new Game2048();
-        bestScore = GameRecords.getInstance().getBestScore("2048_blocks");
 
         cellSize = 23;
         spacing = 3;
@@ -71,11 +68,11 @@ public class Game2048Screen extends Screen {
             if (client != null) client.setScreen(parent);
         }).dimensions(startX, btnY, btnWidth, btnHeight).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.2048.info.new_game"), b -> game.reset())
-                .dimensions(startX + btnWidth + spacingBtn, btnY, btnWidth, btnHeight).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.2048.info.new_game"), b -> game.reset()).dimensions(startX + btnWidth + spacingBtn, btnY, btnWidth, btnHeight).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.2048.info.pause"), b -> {
             if (game != null) game.togglePause();
+            assert game != null;
             b.setMessage(game.getState() == Game2048.State.PAUSED
                     ? Text.translatable("game.2048.info.resume")
                     : Text.translatable("game.2048.info.pause"));
@@ -90,6 +87,7 @@ public class Game2048Screen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         if (game.getState() == Game2048.State.RUNNING) {
             tickCounter++;
+            int dropInterval = 50;
             if (tickCounter >= dropInterval) {
                 tickCounter = 0;
                 game.dropStep();
@@ -126,13 +124,13 @@ public class Game2048Screen extends Screen {
         }
 
         if (game.getState() == Game2048.State.PAUSED) {
-            context.fill(playX, playY, playX + playWidth, playY + playHeight, 0xAA000000);
+            context.fill(playX, playY, playX + playWidth, playY + playHeight, 0xAA000000); // чёрное полупрозрачное
             context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.2048.info.paused"),
                     playX + playWidth / 2, playY + playHeight / 2, 0xFFFFFFFF);
         }
 
         if (game.getState() == Game2048.State.VICTORY) {
-            context.fill(playX, playY, playX + playWidth, playY + playHeight, 0xAA00FF00);
+            context.fill(playX, playY, playX + playWidth, playY + playHeight, 0xAA00FF00); // зеленое затемнение
             context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.2048.info.victory"),
                     playX + playWidth / 2, playY + playHeight / 2 - 10, 0xFFFFFFFF);
             context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.2048.info.score", game.getScore()),
@@ -160,6 +158,7 @@ public class Game2048Screen extends Screen {
         context.fill(panelX - 10, panelTop, panelX + 190, panelBottom, 0x88000000);
 
         int y = playY;
+
         context.drawText(textRenderer, Text.translatable("game.2048.title"), panelX, y, 0xFF00FFFF, false);
         y += 20;
 
@@ -186,15 +185,12 @@ public class Game2048Screen extends Screen {
         y += 12;
 
         context.drawText(textRenderer, Text.translatable("game.2048.info.restart"), panelX, y, 0xFFCCCCCC, false);
-        y+= 12;
-
-        context.drawText(textRenderer, Text.translatable("game.2048.info.keypause"), panelX, y, 0xFFCCCCCC, false);
     }
 
     @Override
     public boolean keyPressed(KeyInput input) {
         if (game.getState() == Game2048.State.RUNNING || game.getState() == Game2048.State.PAUSED) {
-            switch (input.getKeycode()) {
+            switch (input.key()) {
                 case GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_LEFT -> game.move(-1);
                 case GLFW.GLFW_KEY_D, GLFW.GLFW_KEY_RIGHT -> game.move(1);
                 case GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_DOWN -> game.dropStep();

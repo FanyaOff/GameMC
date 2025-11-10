@@ -1,20 +1,16 @@
 package com.fanya.gamemc.minigames.simon;
 
 import com.fanya.gamemc.data.GameRecords;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.texture.MissingSprite;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.List;
 
 public class SimonGameScreen extends Screen {
 
@@ -49,7 +45,10 @@ public class SimonGameScreen extends Screen {
         int buttonHeight = 16;
         int y = this.height - 28;
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("gui.back"), b -> this.client.setScreen(parent))
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("gui.back"), b -> {
+                    assert this.client != null;
+                    this.client.setScreen(parent);
+                })
                 .dimensions(this.width / 2 - buttonWidth - 4, y, buttonWidth, buttonHeight).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.simon.button.newgame"), b -> game.reset())
@@ -148,6 +147,7 @@ public class SimonGameScreen extends Screen {
             context.fill(x + size, y, x + size + border, y + size, color);
         }
 
+        assert this.client != null;
         int mx = (int) (this.client.mouse.getX() * this.width / this.client.getWindow().getFramebufferWidth());
         int my = (int) (this.client.mouse.getY() * this.height / this.client.getWindow().getFramebufferHeight());
         if (mx >= x && mx <= x + size && my >= y && my <= y + size) {
@@ -189,7 +189,7 @@ public class SimonGameScreen extends Screen {
 
     @Override
     public boolean mouseClicked(Click click, boolean doubled) {
-        if (game == null || click.button() != 0) return super.mouseClicked(click, doubled);
+        if (game == null || click.button() != 0) return super.mouseClicked(click,doubled);
         if (game.getState() == SimonGame.State.SHOWING) return false;
 
         int mx = (int) click.x();
@@ -209,18 +209,19 @@ public class SimonGameScreen extends Screen {
                         GameRecords.getInstance().setBestScore("simon", bestScore);
                     }
                 }
-                return handled || super.mouseClicked(click, doubled);
+                return handled || super.mouseClicked(click,doubled);
             }
         }
-        return super.mouseClicked(click, doubled);
+        return super.mouseClicked(click,doubled);
     }
 
     @Override
     public boolean keyPressed(KeyInput input) {
-        if (input.getKeycode() == GLFW.GLFW_KEY_R) {
+        if (input.key() == GLFW.GLFW_KEY_R) {
             game.reset();
             return true;
-        } else if (input.getKeycode() == GLFW.GLFW_KEY_ESCAPE) {
+        } else if (input.key() == GLFW.GLFW_KEY_ESCAPE) {
+            assert this.client != null;
             this.client.setScreen(parent);
             return true;
         }

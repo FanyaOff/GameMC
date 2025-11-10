@@ -2,32 +2,34 @@ package com.fanya.gamemc.minigames.snake;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTextureView;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.sound.PositionedSoundInstance;
+
 import net.minecraft.screen.ScreenTexts;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.Text;
+
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
-import net.minecraft.sound.SoundCategory;
+
 import net.minecraft.sound.SoundEvents;
 import org.lwjgl.glfw.GLFW;
 import com.fanya.gamemc.data.GameRecords;
 
+import java.util.List;
 
 public class SnakeGameScreen extends Screen {
     private int bestScore;
     private final Screen parent;
     private SnakeGame game;
 
-    private int gridWidth;
-    private int gridHeight;
+    private final int gridWidth;
+    private final int gridHeight;
 
     private static final int MIN_CELL_SIZE = 8;
     private static final int MAX_CELL_SIZE = 28;
@@ -56,7 +58,8 @@ public class SnakeGameScreen extends Screen {
         calculateGridSize();
 
         game = new SnakeGame(gridWidth, gridHeight);
-        game.setOnFoodEaten((callback) -> {
+        game.setOnFoodEaten((foodConfig) -> {
+            // звук при съедании любой еды
             MinecraftClient.getInstance().getSoundManager().play(
                     PositionedSoundInstance.master(SoundEvents.ENTITY_GENERIC_EAT, 1.0F)
             );
@@ -69,7 +72,10 @@ public class SnakeGameScreen extends Screen {
 
         this.addDrawableChild(ButtonWidget.builder(
                 ScreenTexts.BACK,
-                button -> this.client.setScreen(this.parent)
+                button -> {
+                    assert this.client != null;
+                    this.client.setScreen(this.parent);
+                }
         ).dimensions(this.width / 2 - buttonWidth * 2 - spacing * 2, buttonY, buttonWidth, buttonHeight).build());
 
         this.addDrawableChild(ButtonWidget.builder(
@@ -79,7 +85,10 @@ public class SnakeGameScreen extends Screen {
 
         this.addDrawableChild(ButtonWidget.builder(
                 Text.translatable("game.snake.button.select_size"),
-                button -> this.client.setScreen(new SnakeSizeSelectScreen(parent))
+                button -> {
+                    assert this.client != null;
+                    this.client.setScreen(new SnakeSizeSelectScreen(parent));
+                }
         ).dimensions(this.width / 2 + buttonWidth + spacing * 2, buttonY, buttonWidth + 10, buttonHeight).build());
     }
 
@@ -206,23 +215,26 @@ public class SnakeGameScreen extends Screen {
 
         int padding = Math.max(1, cellSize / 10);
 
-        SnakeGame.Position food = game.getFood();
-        Identifier foodTexture = game.getCurrentFoodTexture();
-
-        if (food != null && foodTexture != null) {
-            try {
-                GpuTextureView foodGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(foodTexture).getGlTextureView();
-                int foodSize = Math.max(1, cellSize - padding * 2);
-                if (foodSize > 2) {
-                    RenderSystem.setShaderTexture(0, foodGpuTexture);
-                    context.drawTexture(RenderPipelines.GUI_TEXTURED, foodTexture,
-                            gridOffsetX + food.x * cellSize + padding,
-                            gridOffsetY + food.y * cellSize + padding,
-                            0, 0,
-                            foodSize, foodSize,
-                            foodSize, foodSize);
-                }
-            } catch (Exception ignored) { }
+        // Рисуем все еды
+        List<SnakeGame.Position> foods = game.getFoods();
+        for (SnakeGame.Position foodPos : foods) {
+            SnakeGame.FoodConfig cfg = game.getFoodConfigAt(foodPos);
+            Identifier foodTexture = cfg != null ? cfg.getTexture() : null;
+            if (foodTexture != null) {
+                try {
+                    GpuTextureView foodGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(foodTexture).getGlTextureView();
+                    int foodSize = Math.max(1, cellSize - padding * 2);
+                    if (foodSize > 2) {
+                        RenderSystem.setShaderTexture(0, foodGpuTexture);
+                        context.drawTexture(RenderPipelines.GUI_TEXTURED, foodTexture,
+                                gridOffsetX + foodPos.x * cellSize + padding,
+                                gridOffsetY + foodPos.y * cellSize + padding,
+                                0, 0,
+                                foodSize, foodSize,
+                                foodSize, foodSize);
+                    }
+                } catch (Exception ignored) { }
+            }
         }
 
         long now = System.currentTimeMillis();
@@ -358,7 +370,7 @@ public class SnakeGameScreen extends Screen {
     public boolean keyPressed(KeyInput input) {
         if (game == null) return super.keyPressed(input);
 
-        switch (input.getKeycode()) {
+        switch (input.key()) {
             case GLFW.GLFW_KEY_W, GLFW.GLFW_KEY_UP -> {
                 game.setDirection(Direction.NORTH);
                 return true;
@@ -376,7 +388,7 @@ public class SnakeGameScreen extends Screen {
                 return true;
             }
             case GLFW.GLFW_KEY_R -> {
-                if (game != null) game.reset();
+                game.reset();
                 return true;
             }
             case GLFW.GLFW_KEY_ESCAPE -> {

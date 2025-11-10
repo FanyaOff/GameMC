@@ -1,9 +1,10 @@
 package com.fanya.gamemc.screen;
 
+import com.fanya.gamemc.GameMC;
 import com.fanya.gamemc.minigames._2048.Game2048Screen;
 import com.fanya.gamemc.minigames.simon.SimonGameScreen;
-import com.fanya.gamemc.minigames.snake.SnakeGameScreen;
 import com.fanya.gamemc.minigames.snake.SnakeSizeSelectScreen;
+import com.fanya.gamemc.util.VersionChecker;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Click;
@@ -22,12 +23,17 @@ public class GameSelectionScreen extends Screen {
     private ButtonWidget backButton;
     private int scrollOffset = 0;
 
-    private int panelX, panelY, panelWidth = 350, panelHeight = 220;
+    private int panelX;
+    private int panelY;
+    private final int panelWidth = 350;
+    private final int panelHeight = 220;
     private int listAreaX, listAreaY, listAreaWidth, listAreaHeight;
 
-    private int buttonWidth = 200;
-    private int buttonHeight = 20;
-    private int buttonGap = 8;
+    private final int buttonWidth = 200;
+    private final int buttonHeight = 20;
+    private final int buttonGap = 8;
+
+    private final VersionChecker versionChecker = new VersionChecker();
 
     public GameSelectionScreen(Screen parent) {
         super(Text.translatable("menu.gamemc.select"));
@@ -37,6 +43,8 @@ public class GameSelectionScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+
+        versionChecker.fetchLatestVersionAsync();
 
         panelX = this.width / 2 - panelWidth / 2;
         panelY = this.height / 2 - panelHeight / 2;
@@ -102,6 +110,24 @@ public class GameSelectionScreen extends Screen {
         context.drawText(this.textRenderer, Text.literal(desc),
                 this.width / 2 - this.textRenderer.getWidth(desc) / 2, panelY + 30, 0xFFAAAAAA, true);
 
+
+        if (versionChecker.isReady() && versionChecker.isUpdateAvailable()) {
+            String latest = versionChecker.extractModVersion(versionChecker.getLatestVersion());
+
+            int x = this.width / 2 - this.textRenderer.getWidth(Text.translatable("menu.gamemc.gui.update", latest)) / 2;
+            int y = panelY - 12;
+
+            context.drawText(
+                    this.textRenderer,
+                    Text.translatable("menu.gamemc.gui.update", latest),
+                    x,
+                    y,
+                    0xFFFFA500,
+                    true
+            );
+        }
+
+
         MinecraftClient mc = MinecraftClient.getInstance();
         double sf = mc.getWindow().getScaleFactor();
         int scX = (int) (listAreaX * sf);
@@ -145,14 +171,14 @@ public class GameSelectionScreen extends Screen {
         int maxScroll = Math.max(0, totalBtnsHeight - listAreaHeight);
         if (mouseX > listAreaX && mouseX < listAreaX + listAreaWidth &&
                 mouseY > listAreaY && mouseY < listAreaY + listAreaHeight && maxScroll > 0) {
-            scrollOffset = clamp(scrollOffset - (int) (verticalAmount * 20), 0, maxScroll);
+            scrollOffset = clamp(scrollOffset - (int) (verticalAmount * 20), maxScroll);
             return true;
         }
         return false;
     }
 
-    private int clamp(int val, int min, int max) {
-        return Math.max(min, Math.min(max, val));
+    private int clamp(int val, int max) {
+        return Math.max(0, Math.min(max, val));
     }
 
     @Override
@@ -160,14 +186,14 @@ public class GameSelectionScreen extends Screen {
         int y = listAreaY - scrollOffset;
         for (ButtonWidget btn : gameButtons) {
             if (y + buttonHeight > listAreaY && y < listAreaY + listAreaHeight) {
-                if (btn.mouseClicked(click, doubled)) return true;
+                if (btn.mouseClicked(click,doubled)) return true;
             }
             y += buttonHeight + buttonGap;
         }
 
-        if (backButton.mouseClicked(click, doubled)) return true;
+        if (backButton.mouseClicked(click,doubled)) return true;
 
-        return super.mouseClicked(click, doubled);
+        return super.mouseClicked(click,doubled);
     }
 
     @Override
