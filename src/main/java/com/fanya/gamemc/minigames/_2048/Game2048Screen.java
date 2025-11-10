@@ -14,7 +14,9 @@ import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 public class Game2048Screen extends Screen {
+
     private static final Identifier[] BLOCK_TEXTURES = buildTextures();
+
     private static Identifier[] buildTextures() {
         Identifier[] ids = new Identifier[12];
         ids[1] = Identifier.ofVanilla("textures/block/dirt.png");
@@ -40,7 +42,7 @@ public class Game2048Screen extends Screen {
     private int tickCounter = 0;
 
     public Game2048Screen(Screen parent) {
-        super(Text.literal("2048 Blocks"));
+        super(Text.translatable("game.2048.title"));
         this.parent = parent;
     }
 
@@ -78,9 +80,7 @@ public class Game2048Screen extends Screen {
 
         playX = startX;
         playY = (this.height - playHeight) / 2;
-
         panelX = playX + playWidth + 20;
-
     }
 
     @Override
@@ -145,17 +145,16 @@ public class Game2048Screen extends Screen {
         GpuTextureView view = MinecraftClient.getInstance().getTextureManager().getTexture(tex).getGlTextureView();
         RenderSystem.setShaderTexture(0, view);
         context.drawTexture(RenderPipelines.GUI_TEXTURED, tex, x, y, 0, 0, cellSize, cellSize, cellSize, cellSize);
+
         int val = 1 << lvl;
         String s = String.valueOf(val);
         int w = textRenderer.getWidth(s);
-        context.drawText(textRenderer, Text.literal(s),
-                x + (cellSize - w) / 2, y + (cellSize - 8) / 2, 0xFFFFFFFF, true);
+        context.drawText(textRenderer, Text.literal(s), x + (cellSize - w) / 2, y + (cellSize - 8) / 2, 0xFFFFFFFF, true);
     }
 
     private void drawPanel(DrawContext context) {
         int panelTop = playY - 6;
         int panelBottom = playY + playHeight + 6;
-
         context.fill(panelX - 10, panelTop, panelX + 190, panelBottom, 0x88000000);
 
         int y = playY;
@@ -197,7 +196,7 @@ public class Game2048Screen extends Screen {
                 case GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_DOWN -> game.dropStep();
                 case GLFW.GLFW_KEY_SPACE -> game.hardDrop();
                 case GLFW.GLFW_KEY_R -> game.reset();
-                case GLFW.GLFW_KEY_P -> game.togglePause();
+                case GLFW.GLFW_KEY_P -> game.togglePause(); // кейбинд паузы
                 case GLFW.GLFW_KEY_ESCAPE -> {
                     if (client != null) client.setScreen(parent);
                 }
@@ -208,5 +207,7 @@ public class Game2048Screen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() { return false; }
+    public boolean shouldPause() {
+        return false; // игра не ставится на паузу при открытии меню
+    }
 }

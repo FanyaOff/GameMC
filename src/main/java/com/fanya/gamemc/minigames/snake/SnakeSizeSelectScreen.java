@@ -5,7 +5,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 
-public class SnakeSizeSelectScreen extends Screen {
+public class SnakeSizeSelectScreen extends Screen  {
     private final Screen parent;
 
     public SnakeSizeSelectScreen(Screen parent) {
