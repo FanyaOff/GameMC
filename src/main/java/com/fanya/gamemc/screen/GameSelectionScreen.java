@@ -4,6 +4,7 @@ import com.fanya.gamemc.GameMC;
 import com.fanya.gamemc.minigames._2048.Game2048Screen;
 import com.fanya.gamemc.minigames.simon.SimonGameScreen;
 import com.fanya.gamemc.minigames.snake.SnakeSizeSelectScreen;
+import com.fanya.gamemc.minigames.solitaire.SolitaireGameScreen;
 import com.fanya.gamemc.util.VersionChecker;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
@@ -71,6 +72,11 @@ public class GameSelectionScreen extends Screen {
         gameButtons.add(ButtonWidget.builder(
                 Text.translatable("menu.gamemc.button.2048"),
                 button -> setScreenIfPresent(new Game2048Screen(this))
+        ).dimensions(centerX, 0, buttonWidth, buttonHeight).build());
+
+        gameButtons.add(ButtonWidget.builder(
+                Text.translatable("menu.gamemc.button.solitaire"),
+                button -> setScreenIfPresent(new SolitaireGameScreen(this))
         ).dimensions(centerX, 0, buttonWidth, buttonHeight).build());
 
         int backBtnX = this.width / 2 - buttonWidth / 2;
