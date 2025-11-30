@@ -40,7 +40,7 @@ public class SolitaireCard {
 
     private SolitaireCard next;
     private SolitaireCard previous;
-    private boolean shown;
+    private boolean shown; // скрыта ли
 
     public SolitaireCard(Denominations d, Suits s, SolitaireCard n, SolitaireCard p, boolean sh) {
         denomination = d;
@@ -57,7 +57,9 @@ public class SolitaireCard {
     public SolitaireCard getNext() {return next;}
     public SolitaireCard getPrevious() {return previous;}
 
-    public String getTexturePath() { return GameMC.MOD_ID + ":gui/suits/" + suit.getKey() + "/" + denomination.getKey(); }
+    // Путь к текстуре
+    public static String getTexturePath(Suits suit, Denominations denomination) { return "textures/gui/suits/" + suit.getKey() + "/" + denomination.getKey() + ".png"; }
+    public String getTexturePath() { return getTexturePath(suit, denomination); }
 
     public SolitaireCard setNext(SolitaireCard n) { next = n; return this; }
     public SolitaireCard setPrevious(SolitaireCard p) { previous = p; return this; }

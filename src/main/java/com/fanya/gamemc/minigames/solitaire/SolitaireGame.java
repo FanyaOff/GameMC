@@ -4,7 +4,11 @@ import com.fanya.gamemc.minigames.solitaire.subclass.SolitaireCard;
 import net.minecraft.util.math.random.Random;
 
 public class SolitaireGame {
-    private SolitaireCard[] getFullDeck() {
+    public enum State { RUNNING, VICTORY }
+    private SolitaireGame.State state = SolitaireGame.State.RUNNING;
+    public State getState() { return state; }
+
+    private SolitaireCard[] getFullDeck() { // Генератор 52х карт
         SolitaireCard[] deck = new SolitaireCard[52];
         int i = 0;
 
@@ -19,7 +23,7 @@ public class SolitaireGame {
 
     private final SolitaireCard[] colons = new SolitaireCard[7];
     private SolitaireCard[] bases;
-    private SolitaireCard gameDeck = null;
+    private SolitaireCard gameDeck = null; // колоды
 
     public SolitaireGame() { reset(); }
 
@@ -28,6 +32,7 @@ public class SolitaireGame {
         Random rnd = Random.create();
         bases = new SolitaireCard[4];
 
+        // перемешываем
         for (int i = deck.length - 1; i > 0; i--) {
             int index = rnd.nextInt(i + 1);
             SolitaireCard temp = deck[index];
@@ -44,14 +49,14 @@ public class SolitaireGame {
                 node.getNext().setPrevious(node);
                 node = node.getNext();
             }
-            node.show();
+            node.show(); // открываем последнюю
         }
         gameDeck = deck[count];
         gameDeck.setPrevious(deck[51]);
         deck[51].setNext(gameDeck);
     }
 
-    public void tryToMoveInTable(SolitaireCard from, int colon) {
+    public void tryToMoveInTable(SolitaireCard from, int colon) { // перенос карты на стол
         if(colon > 7 || colon < 0) return;
         SolitaireCard last = colons[colon];
         if(last == null && from.getDenomination().equals(SolitaireCard.Denominations.KING)) {
@@ -69,7 +74,7 @@ public class SolitaireGame {
         }
     }
 
-    public boolean tryToMoveInBase(SolitaireCard from) {
+    public boolean tryToMoveInBase(SolitaireCard from) { // перенос карты в базу
         int colon = from.getSuit().ordinal();
         SolitaireCard last = bases[colon];
         if(last == null && from.getDenomination().equals(SolitaireCard.Denominations.ACE)) {
@@ -87,8 +92,12 @@ public class SolitaireGame {
         return false;
     }
 
-    private void moveCard(SolitaireCard from) {
-        if (gameDeck != null && gameDeck == from) { // TODO: проверить чтоб не циклилось на себе
+    public void tryToMoveInDeck(SolitaireCard from) { // Прокрутка колоды
+        if(gameDeck != null) gameDeck = gameDeck.getNext();
+    }
+
+    private void moveCard(SolitaireCard from) { // общий перенос карты
+        if (gameDeck != null && gameDeck == from) {
             if (from.getPrevious() == from) {
                 gameDeck = null;
             } else {
@@ -105,10 +114,14 @@ public class SolitaireGame {
         }
     }
 
-    public void checkWin() {
+    public void checkWin() { // авто складыватель карт
         if(check()) {
             checkWin();
         }
+        for (SolitaireCard card : bases)
+            if(card.getDenomination() != SolitaireCard.Denominations.KING)
+                return;
+        state = State.VICTORY;
     }
 
     private boolean check() {
@@ -119,4 +132,6 @@ public class SolitaireGame {
         }
         return gameDeck != null && tryToMoveInBase(gameDeck);
     }
+
+    public boolean isDeckEmpty() {return gameDeck==null;}
 }
