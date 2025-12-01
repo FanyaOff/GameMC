@@ -53,7 +53,7 @@ public class SolitaireGame {
         }
         gameDeck = deck[count];
         gameDeck.setPrevious(deck[51]);
-        deck[51].setNext(gameDeck);
+        deck[51].setNext(gameDeck);//TODO: связать все между собой
     }
 
     public void tryToMoveInTable(SolitaireCard from, int colon) { // перенос карты на стол
@@ -134,4 +134,7 @@ public class SolitaireGame {
     }
 
     public boolean isDeckEmpty() {return gameDeck==null;}
+    public SolitaireCard getGameDeck() {return gameDeck;}
+    public SolitaireCard getColon(int num) {return (0>num || num > 6) ? null : colons[num];}
+    public SolitaireCard getBase(int num) {return (0>num || num > 4) ? null : bases[num];}
 }

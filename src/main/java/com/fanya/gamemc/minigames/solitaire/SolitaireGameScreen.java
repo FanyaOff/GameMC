@@ -28,7 +28,7 @@ public class SolitaireGameScreen extends Screen {
     private final Screen parent;
     private SolitaireGame game;
 
-    private int cardSizeX, cardSizeY, spacingX, spacingY, playWidth, playHeight, btnWidth, btnHeight, spacingBtn;
+    private int cardSizeX, cardSizeY, spacingX, spacingY, playWidth, playHeight, playStartX, playStartY, btnWidth, btnHeight, spacingBtn;
 
     private int moveCounter = 0;
 
@@ -39,32 +39,22 @@ public class SolitaireGameScreen extends Screen {
 
     @Override
     protected void init() {
-        game = new SolitaireGame();
+        if(game == null) game = new SolitaireGame();
 
-        int scale = 2;
-
-        cardSizeX = 32*scale;
-        cardSizeY = 48*scale;
-        spacingX = 10*scale;
-        spacingY = 5*scale;
+        cardSizeX = 32;
+        cardSizeY = 48;
+        spacingX = 10;
+        spacingY = 7;
 
         playWidth = 7 * (cardSizeX + spacingX) + spacingX; // 304
         playHeight = 22 * spacingY + 2 * cardSizeY; // 316
 
-        if(width < playWidth || height < playHeight) {
-            scale = 1;
-            cardSizeX = 32*scale;
-            cardSizeY = 48*scale;
-            spacingX = 10*scale;
-            spacingY = 5*scale;
-
-            playWidth = 7 * (cardSizeX + spacingX) + spacingX;
-            playHeight = 22 * spacingY + 2 * cardSizeY;
-        }
-
         btnWidth = 100;
         btnHeight = 20;
         spacingBtn = 10;
+
+        playStartX = Math.max((width - playWidth) / 2, 0);
+        playStartY = Math.min((height - playHeight - btnHeight - spacingBtn) * 2 / 3 + btnHeight + spacingBtn, height - playHeight);
 
         int totalBtnWidth = btnWidth * 2 + spacingBtn * 2;
         int startX = (this.width - totalBtnWidth) / 2;
@@ -83,37 +73,57 @@ public class SolitaireGameScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         super.render(context, mouseX, mouseY, deltaTicks);
 
-        //context.drawTexture(RenderPipelines.GUI_TEXTURED, BACK_CARD, 0, 0, 0, 0, cardSizeX, cardSizeY, cardSizeX, cardSizeY);
-
-        //for(SolitaireCard.Suits suit : SolitaireCard.Suits.values())
-        //    for(SolitaireCard.Denominations denomination : SolitaireCard.Denominations.values())
-        //        context.drawTexture(RenderPipelines.GUI_TEXTURED, CARD_TEXTURES[suit.ordinal()][denomination.ordinal()], (cardSizeX + spacing) * denomination.ordinal(), (cardSizeY + spacing) * (suit.ordinal() + 1), 0, 0, cardSizeX, cardSizeY, cardSizeX, cardSizeY);
         renderUI(context);
+        renderCards(context);
     }
 
     private void renderUI(DrawContext context) {
-        int playStartX = Math.max((width - playWidth) / 2, 0);
-        int playStartY = Math.min((height - playHeight - btnHeight - spacingBtn) * 2 / 3 + btnHeight + spacingBtn, height - playHeight);
-
         // main panel
         context.fillGradient(playStartX-2, playStartY-2, playStartX + playWidth+2, playStartY + playHeight+2, 0xFF1a8c99, 0xFF0d5d66);
         context.fill(playStartX, playStartY, playStartX + playWidth, playStartY + playHeight, 0xFF0A1A1F);
 
         // deck panel
-        context.fillGradient(playStartX+spacingX-2, playStartY+spacingY-2, playStartX+spacingX+cardSizeX+2, playStartY+spacingY+cardSizeY+2, 0x881a8c99, 0x880d5d66);
-        context.fillGradient(playStartX+spacingX*2+cardSizeX-2, playStartY+spacingY-2, playStartX+(spacingX+cardSizeX)*2+2, playStartY+spacingY+cardSizeY+2, 0x881a8c99, 0x880d5d66);
+        context.fillGradient(playStartX+spacingX-1, playStartY+spacingY-1, playStartX+spacingX+cardSizeX+1, playStartY+spacingY+cardSizeY+1, 0x881a8c99, 0x880d5d66);
+        context.fillGradient(playStartX+spacingX*2+cardSizeX-1, playStartY+spacingY-1, playStartX+(spacingX+cardSizeX)*2+1, playStartY+spacingY+cardSizeY+1, 0x881a8c99, 0x880d5d66);
         context.fill(playStartX+spacingX, playStartY+spacingY, playStartX+spacingX+cardSizeX, playStartY+spacingY+cardSizeY, 0xFF0A1A1F);
         context.fill(playStartX+spacingX*2+cardSizeX, playStartY+spacingY, playStartX+(spacingX+cardSizeX)*2, playStartY+spacingY+cardSizeY, 0xFF0A1A1F);
 
         // base panel
         for(int x = playStartX+(spacingX+cardSizeX)*3+spacingX; x < playStartX + playWidth; x += spacingX+cardSizeX) {
-            context.fillGradient(x - 2, playStartY+spacingY-2, x + cardSizeX + 2, playStartY+spacingY+cardSizeY+2, 0x881a8c99, 0x880d5d66);
+            context.fillGradient(x - 1, playStartY+spacingY-1, x + cardSizeX + 1, playStartY+spacingY+cardSizeY+1, 0x881a8c99, 0x880d5d66);
             context.fill(x, playStartY+spacingY, x + cardSizeX, playStartY+spacingY+cardSizeY, 0xFF0A1A1F);
         }
 
         if(!game.isDeckEmpty()) {
             context.drawTexture(RenderPipelines.GUI_TEXTURED, BACK_CARD,playStartX+spacingX, playStartY+spacingY,0,0,cardSizeX,cardSizeY,cardSizeX,cardSizeY);
         }
+    }
+
+    private void renderCards(DrawContext context) {
+        SolitaireCard card = game.getGameDeck();
+        if(card != null)
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, CARD_TEXTURES[card.getSuit().ordinal()][card.getDenomination().ordinal()],
+                    playStartX+spacingX*2+cardSizeX, playStartY+spacingY,0,0,cardSizeX,cardSizeY,cardSizeX,cardSizeY);
+        for(int i = 0; i < 4; i ++) renderBase(context, i);
+        for(int i = 0; i < 7; i ++) renderColon(context, i);
+    }
+
+    private void renderColon(DrawContext context, int num) {
+        SolitaireCard card = game.getColon(num);
+        int y = playStartY+spacingY*2+cardSizeY;
+        while (card != null) {
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, card.isShown() ? CARD_TEXTURES[card.getSuit().ordinal()][card.getDenomination().ordinal()] : BACK_CARD,
+                    playStartX+spacingX*(1+num)+cardSizeX*num, y,0,0,cardSizeX,cardSizeY,cardSizeX,cardSizeY);
+            card = card.getNext();
+            y += spacingY;
+        }
+    }
+
+    private void renderBase(DrawContext context, int num) {
+        SolitaireCard card = game.getBase(num);
+        if(card != null)
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, CARD_TEXTURES[card.getSuit().ordinal()][card.getDenomination().ordinal()],
+                    playStartX+spacingX*(4+num)+cardSizeX*(3+num), playStartY+spacingY,0,0,cardSizeX,cardSizeY,cardSizeX,cardSizeY);
     }
 
     @Override
@@ -140,6 +150,14 @@ public class SolitaireGameScreen extends Screen {
             //TODO
         }
         return super.mouseClicked(click, doubled);
+    }
+
+    @Override
+    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
+        if(click.isLeft()) {
+            //TODO
+        }
+        return super.mouseDragged(click, offsetX, offsetY);
     }
 
     @Override
