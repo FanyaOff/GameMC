@@ -4,6 +4,7 @@ import com.fanya.gamemc.minigames.solitaire.subclass.SolitaireCard;
 import net.minecraft.util.math.random.Random;
 
 public class SolitaireGame {
+
     public enum State { RUNNING, VICTORY }
     private SolitaireGame.State state = SolitaireGame.State.RUNNING;
     public State getState() { return state; }
@@ -53,7 +54,11 @@ public class SolitaireGame {
         }
         gameDeck = deck[count];
         gameDeck.setPrevious(deck[51]);
-        deck[51].setNext(gameDeck);//TODO: связать все между собой
+        deck[51].setNext(gameDeck);
+        for(int i = count; i < 51; i++) {
+            deck[i].setNext(deck[i+1]);
+            deck[i+1].setPrevious(deck[i]);
+        }
     }
 
     public void tryToMoveInTable(SolitaireCard from, int colon) { // перенос карты на стол
@@ -61,6 +66,7 @@ public class SolitaireGame {
         SolitaireCard last = colons[colon];
         if(last == null && from.getDenomination().equals(SolitaireCard.Denominations.KING)) {
             moveCard(from);
+            if(bases[from.getSuit().ordinal()] == from) bases[from.getSuit().ordinal()] = null; // Если вытащена последняя карта
             colons[colon] = from.setPrevious(null);
         } else if(last != null) {
             while (last.getNext() != null) last = last.getNext();
@@ -69,6 +75,7 @@ public class SolitaireGame {
             if(last.getDenomination().ordinal() - from.getDenomination().ordinal() != 1) return;
 
             moveCard(from);
+            if(bases[from.getSuit().ordinal()] == from) bases[from.getSuit().ordinal()] = null; // Если вытащена последняя карта
             from.setPrevious(last);
             last.setNext(from);
         }
@@ -79,11 +86,14 @@ public class SolitaireGame {
         SolitaireCard last = bases[colon];
         if(last == null && from.getDenomination().equals(SolitaireCard.Denominations.ACE)) {
             moveCard(from);
+            for (int i = 0; i < 7; i++) if (colons[i] == from) colons[i] = null;  // Если вытащена последняя карта
             bases[colon] = from.setPrevious(null);
             return true;
         } else if(last != null) {
             if(from.getDenomination().ordinal() - last.getDenomination().ordinal() != 1) return false;
+
             moveCard(from);
+            for (int i = 0; i < 7; i++) if (colons[i] == from) colons[i] = null;  // Если вытащена последняя карта
             from.setPrevious(last);
             last.setNext(from);
             bases[colon] = from;
@@ -108,20 +118,22 @@ public class SolitaireGame {
             from.setNext(null)
                     .show();
         } else {
-            from.getPrevious()
-                    .setNext(null)
-                    .show();
+            if(from.getPrevious() != null)
+                from.getPrevious()
+                        .setNext(null)
+                        .show();
         }
     }
 
     public void checkWin() { // авто складыватель карт
         if(check()) {
             checkWin();
+        } else {
+            for (SolitaireCard card : bases)
+                if(card!=null && card.getDenomination() != SolitaireCard.Denominations.KING)
+                    return;
+            state = State.VICTORY;
         }
-        for (SolitaireCard card : bases)
-            if(card.getDenomination() != SolitaireCard.Denominations.KING)
-                return;
-        state = State.VICTORY;
     }
 
     private boolean check() {
@@ -137,4 +149,19 @@ public class SolitaireGame {
     public SolitaireCard getGameDeck() {return gameDeck;}
     public SolitaireCard getColon(int num) {return (0>num || num > 6) ? null : colons[num];}
     public SolitaireCard getBase(int num) {return (0>num || num > 4) ? null : bases[num];}
+
+    public int getColonCount(int num) {
+        SolitaireCard card = getColon(num);
+        if(card==null) return 0;
+        int count = 1;
+        while(card.getNext() != null) {
+            count++;
+            card = card.getNext();
+        }
+        return count;
+    }
+
+    public void nextDeckCard() {
+        gameDeck = gameDeck.getNext();
+    }
 }
