@@ -65,8 +65,12 @@ public class SolitaireGame {
         if(colon > 7 || colon < 0) return;
         SolitaireCard last = colons[colon];
         if(last == null && from.getDenomination().equals(SolitaireCard.Denominations.KING)) {
-            moveCard(from);
-            if(bases[from.getSuit().ordinal()] == from) bases[from.getSuit().ordinal()] = null; // Если вытащена последняя карта
+
+            if(bases[from.getSuit().ordinal()] == from) bases[from.getSuit().ordinal()] = from.getPrevious();
+            if (moveCard(from)) {
+                for(int i = 0; i < 7; i++) if(colons[i] == from && i != colon) colons[i] = null;
+            }
+
             colons[colon] = from.setPrevious(null);
         } else if(last != null) {
             while (last.getNext() != null) last = last.getNext();
@@ -74,8 +78,11 @@ public class SolitaireGame {
                     || (from.getSuit().ordinal() > 1 && last.getSuit().ordinal() > 1)) return;
             if(last.getDenomination().ordinal() - from.getDenomination().ordinal() != 1) return;
 
-            moveCard(from);
-            if(bases[from.getSuit().ordinal()] == from) bases[from.getSuit().ordinal()] = null; // Если вытащена последняя карта
+            if(bases[from.getSuit().ordinal()] == from) bases[from.getSuit().ordinal()] = from.getPrevious();
+            if (moveCard(from)) {
+                for(int i = 0; i < 7; i++) if(colons[i] == from && i != colon) colons[i] = null;
+            }
+
             from.setPrevious(last);
             last.setNext(from);
         }
@@ -85,15 +92,12 @@ public class SolitaireGame {
         int colon = from.getSuit().ordinal();
         SolitaireCard last = bases[colon];
         if(last == null && from.getDenomination().equals(SolitaireCard.Denominations.ACE)) {
-            moveCard(from);
-            for (int i = 0; i < 7; i++) if (colons[i] == from) colons[i] = null;  // Если вытащена последняя карта
+            if(moveCard(from)) for(int i = 0; i < 7; i++) if(colons[i] == from) colons[i] = null;
             bases[colon] = from.setPrevious(null);
             return true;
         } else if(last != null) {
             if(from.getDenomination().ordinal() - last.getDenomination().ordinal() != 1) return false;
-
-            moveCard(from);
-            for (int i = 0; i < 7; i++) if (colons[i] == from) colons[i] = null;  // Если вытащена последняя карта
+            if(moveCard(from)) for(int i = 0; i < 7; i++) if(colons[i] == from) colons[i] = null;
             from.setPrevious(last);
             last.setNext(from);
             bases[colon] = from;
@@ -102,11 +106,11 @@ public class SolitaireGame {
         return false;
     }
 
-    public void tryToMoveInDeck(SolitaireCard from) { // Прокрутка колоды
+    public void nextDeckCard() { // Прокрутка колоды
         if(gameDeck != null) gameDeck = gameDeck.getNext();
     }
 
-    private void moveCard(SolitaireCard from) { // общий перенос карты
+    private boolean moveCard(SolitaireCard from) { // общий перенос карты
         if (gameDeck != null && gameDeck == from) {
             if (from.getPrevious() == from) {
                 gameDeck = null;
@@ -122,7 +126,9 @@ public class SolitaireGame {
                 from.getPrevious()
                         .setNext(null)
                         .show();
+            else return true;
         }
+        return false;
     }
 
     public void checkWin() { // авто складыватель карт
@@ -161,7 +167,18 @@ public class SolitaireGame {
         return count;
     }
 
-    public void nextDeckCard() {
-        gameDeck = gameDeck.getNext();
+    public SolitaireCard getCardAt(int cartX, int cartY) {// 0 1
+        if(cartY == 0) {
+            if (cartX == 1) return gameDeck;
+            if (cartX > 2) return bases[cartX - 3];
+            return null;
+        } else {
+            SolitaireCard card = colons[cartX];
+            for(int i = 0; i < cartY-1; i++) {
+                if(card == null) return null;
+                card = card.getNext();
+            }
+            return card;
+        }
     }
 }

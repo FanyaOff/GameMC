@@ -31,6 +31,8 @@ public class SolitaireGameScreen extends Screen {
     private int cardSizeX, cardSizeY, spacingX, spacingY, playWidth, playHeight, playStartX, playStartY, btnWidth, btnHeight, spacingBtn;
 
     private int moveCounter = 0;
+    private SolitaireCard selectedCard = null;
+    private double deltaX = 0, deltaY = 0;
 
     public SolitaireGameScreen(Screen parent) {
         super(Text.translatable("game.solitaire.title"));
@@ -66,6 +68,9 @@ public class SolitaireGameScreen extends Screen {
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.solitaire.info.new_game"), b -> {
             game.reset();
+            selectedCard = null;
+            deltaX = 0;
+            deltaY = 0;
         }).dimensions(startX + btnWidth + spacingBtn, btnY, btnWidth, btnHeight).build());
     }
 
@@ -128,17 +133,47 @@ public class SolitaireGameScreen extends Screen {
         }
 
         SolitaireCard card = game.getGameDeck();
-        if(card != null)
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, CARD_TEXTURES[card.getSuit().ordinal()][card.getDenomination().ordinal()],
-                    playStartX+spacingX*2+cardSizeX, playStartY+spacingY,0,0,cardSizeX,cardSizeY,cardSizeX,cardSizeY);
+        if(card != null) {
+            int x = playStartX + spacingX * 2 + cardSizeX,
+                y = playStartY + spacingY;
+            if(card == selectedCard) {
+                if(card.getPrevious() != card) {
+                    context.drawTexture(RenderPipelines.GUI_TEXTURED, CARD_TEXTURES[card.getPrevious().getSuit().ordinal()][card.getPrevious().getDenomination().ordinal()],
+                            x, y, 0, 0, cardSizeX, cardSizeY, cardSizeX, cardSizeY);
+                }
+            } else {
+                context.drawTexture(RenderPipelines.GUI_TEXTURED, CARD_TEXTURES[card.getSuit().ordinal()][card.getDenomination().ordinal()],
+                        x, y, 0, 0, cardSizeX, cardSizeY, cardSizeX, cardSizeY);
+            }
+        }
         for(int i = 0; i < 4; i ++) renderBase(context, i);
         for(int i = 0; i < 7; i ++) renderColon(context, i);
+        renderSelectedCard(context, selectedCard == game.getGameDeck());
+    }
+
+    private void renderSelectedCard(DrawContext context, boolean isDeck) {
+        if(selectedCard != null) {
+            int x = (int) deltaX - cardSizeX / 2,
+                y = (int) deltaY - cardSizeY / 5;
+            SolitaireCard card = selectedCard;
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, CARD_TEXTURES[card.getSuit().ordinal()][card.getDenomination().ordinal()],
+                    x, y, 0, 0, cardSizeX, cardSizeY, cardSizeX, cardSizeY);
+            if(!isDeck) {
+                while (card.getNext() != null) {
+                    card = card.getNext();
+                    y += spacingY;
+                    context.drawTexture(RenderPipelines.GUI_TEXTURED, CARD_TEXTURES[card.getSuit().ordinal()][card.getDenomination().ordinal()],
+                            x, y, 0, 0, cardSizeX, cardSizeY, cardSizeX, cardSizeY);
+                }
+            }
+        }
     }
 
     private void renderColon(DrawContext context, int num) {
         SolitaireCard card = game.getColon(num);
         int y = playStartY+spacingY*2+cardSizeY;
         while (card != null) {
+            if(card == selectedCard) break;
             context.drawTexture(RenderPipelines.GUI_TEXTURED, card.isShown() ? CARD_TEXTURES[card.getSuit().ordinal()][card.getDenomination().ordinal()] : BACK_CARD,
                     playStartX+spacingX*(1+num)+cardSizeX*num, y,0,0,cardSizeX,cardSizeY,cardSizeX,cardSizeY);
             card = card.getNext();
@@ -148,9 +183,14 @@ public class SolitaireGameScreen extends Screen {
 
     private void renderBase(DrawContext context, int num) {
         SolitaireCard card = game.getBase(num);
-        if(card != null)
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, CARD_TEXTURES[card.getSuit().ordinal()][card.getDenomination().ordinal()],
-                    playStartX+spacingX*(4+num)+cardSizeX*(3+num), playStartY+spacingY,0,0,cardSizeX,cardSizeY,cardSizeX,cardSizeY);
+        if(card != null) {
+            if (card == selectedCard) {
+                if (card.getPrevious() != null)
+                    context.drawTexture(RenderPipelines.GUI_TEXTURED, CARD_TEXTURES[card.getPrevious().getSuit().ordinal()][card.getPrevious().getDenomination().ordinal()],
+                            playStartX + spacingX * (4 + num) + cardSizeX * (3 + num), playStartY + spacingY, 0, 0, cardSizeX, cardSizeY, cardSizeX, cardSizeY);
+            } else context.drawTexture(RenderPipelines.GUI_TEXTURED, CARD_TEXTURES[card.getSuit().ordinal()][card.getDenomination().ordinal()],
+                    playStartX + spacingX * (4 + num) + cardSizeX * (3 + num), playStartY + spacingY, 0, 0, cardSizeX, cardSizeY, cardSizeX, cardSizeY);
+        }
     }
 
     @Override
@@ -169,32 +209,50 @@ public class SolitaireGameScreen extends Screen {
 
     @Override
     public boolean mouseClicked(Click click, boolean doubled) {
-        GameMC.LOGGER.info(click.isLeft() + " " + click.isRight() + " " + click.button());
         if(click.button() == 1) {
             //play "trrr" sound
             game.checkWin();
             return true;
         } else if(click.button() == 0) {
             int cardPos = getCardByMouse(click.x(), click.y());
+            if(cardPos == -1) return super.mouseClicked(click, doubled);
             int cartX = cardPos%10,
                 cartY = (cardPos/10)-1;
-            GameMC.LOGGER.info(String.valueOf(cardPos));
-            switch (cardPos) {
-                case 0: game.nextDeckCard();
+            if(cardPos == 10) {
+                game.nextDeckCard();
+            } else {
+                selectedCard = game.getCardAt(cartX, cartY);
+                if (selectedCard != null && !selectedCard.isShown() && cartY > 0) selectedCard = null;
+                deltaX = click.x();
+                deltaY = click.y();
             }
         }
         return super.mouseClicked(click, doubled);
     }
 
     @Override
-    public boolean mouseDragged(Click click, double offsetX, double offsetY) { // move mouse
-        if(click.isLeft()) {
-        }
+    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
+        deltaX += offsetX;
+        deltaY += offsetY;
         return super.mouseDragged(click, offsetX, offsetY);
     }
 
     @Override
     public boolean mouseReleased(Click click) { // unclick mouse
+        if(click.button() == 0 && selectedCard != null) {
+            int cardPos = getCardByMouse(click.x(), click.y());
+            if(cardPos != -1) {
+                int cartX = cardPos % 10,
+                        cartY = (cardPos / 10) - 1;
+                if (cartY == 0 && cartX > 2)
+                    game.tryToMoveInBase(selectedCard);
+                if (cartY > 0)
+                    game.tryToMoveInTable(selectedCard, cartX);
+            }
+        }
+        selectedCard = null;
+        deltaX = 0;
+        deltaY = 0;
         return super.mouseReleased(click);
     }
 
@@ -212,14 +270,15 @@ public class SolitaireGameScreen extends Screen {
             int x = (int) mouseX-i;
             if(x >= 0 && x <= cardSizeX) {
                 if(mouseY >= playStartY+spacingY && mouseY <= playStartY+spacingY+cardSizeY) {
-                    return n;
+                    return 10+n;
                 }
                 int maxM = game.getColonCount(n);
+                if(maxM == 0) return 20+n;
                 for(int m = 0; m < maxM; m++) {
                     int j = playStartY+cardSizeY+spacingY*(2+m);
                     int y = (int) mouseY-j;
                     if(y >= 0 && y <= (m == maxM-1 ? cardSizeY : spacingY)) {
-                        return (m+1)*10+n;
+                        return (m+2)*10+n;
                     }
                 }
                 break;
