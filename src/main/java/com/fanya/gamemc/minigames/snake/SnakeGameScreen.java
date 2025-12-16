@@ -222,10 +222,8 @@ public class SnakeGameScreen extends Screen {
             Identifier foodTexture = cfg != null ? cfg.getTexture() : null;
             if (foodTexture != null) {
                 try {
-                    GpuTextureView foodGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(foodTexture).getGlTextureView();
                     int foodSize = Math.max(1, cellSize - padding * 2);
                     if (foodSize > 2) {
-                        RenderSystem.setShaderTexture(0, foodGpuTexture);
                         context.drawTexture(RenderPipelines.GUI_TEXTURED, foodTexture,
                                 gridOffsetX + foodPos.x * cellSize + padding,
                                 gridOffsetY + foodPos.y * cellSize + padding,
@@ -245,12 +243,10 @@ public class SnakeGameScreen extends Screen {
             segment.updatePosition(t);
 
             Identifier texture = (i == 0) ? EMERALD : SLIME;
-            GpuTextureView snakeGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(texture).getGlTextureView();
             int segmentPadding = Math.max(1, cellSize / 12);
             int segmentSize = Math.max(1, cellSize - segmentPadding * 2);
 
             if (segmentSize > 2) {
-                RenderSystem.setShaderTexture(0, snakeGpuTexture);
                 context.drawTexture(RenderPipelines.GUI_TEXTURED, texture,
                         gridOffsetX + (int)(segment.x * cellSize) + segmentPadding,
                         gridOffsetY + (int)(segment.y * cellSize) + segmentPadding,
@@ -402,8 +398,8 @@ public class SnakeGameScreen extends Screen {
     }
 
     @Override
-    public void resize(net.minecraft.client.MinecraftClient client, int width, int height) {
-        super.resize(client, width, height);
+    public void resize(int width, int height) {
+        super.resize(width, height);
         recalcGridLayout();
     }
 
