@@ -142,8 +142,6 @@ public class Game2048Screen extends Screen {
 
     private void drawBlock(DrawContext context, int x, int y, int lvl) {
         Identifier tex = BLOCK_TEXTURES[Math.min(lvl, 11)];
-        GpuTextureView view = MinecraftClient.getInstance().getTextureManager().getTexture(tex).getGlTextureView();
-        RenderSystem.setShaderTexture(0, view);
         context.drawTexture(RenderPipelines.GUI_TEXTURED, tex, x, y, 0, 0, cellSize, cellSize, cellSize, cellSize);
 
         int val = 1 << lvl;

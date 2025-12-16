@@ -1,6 +1,7 @@
 package com.fanya.gamemc;
 
 import com.fanya.gamemc.screen.GameSelectionScreen;
+import com.fanya.gamemc.util.CustomSounds;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -23,6 +24,7 @@ public class GameMC implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         LOGGER.info("GameMC initialized!");
+        CustomSounds.initialize();
 
         openScreenKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.gamemc.open_screen",

@@ -10,6 +10,7 @@
   "menu.gamemc.button.snakegame": "Змейка",
   "menu.gamemc.button.simon": "Саймон",
   "menu.gamemc.button.2048": "2048: Tower",
+  "menu.gamemc.button.solitaire": "Косынка",
   "menu.gamemc.gui.update": "Доступна новая версия: %s",
 
   "game.simon.title": "Саймон",
@@ -50,5 +51,16 @@
   "game.2048.info.paused": "Пауза",
   "game.2048.info.victory": "Вы победили!",
   "game.2048.info.game_over": "Игра окончена!",
-  "game.2048.info.keypause": "P — Пауза"
+  "game.2048.info.keypause": "P — Пауза",
+
+  "game.solitaire.title": "Косынка",
+  "game.solitaire.info.back": "Назад",
+  "game.solitaire.info.new_game": "Новая игра",
+  "game.solitaire.info.score": "Очки: %s",
+  "game.solitaire.info.best_score": "Лучший результат: %s",
+  "game.solitaire.info.victory": "Вы победили!",
+  "game.solitaire.info.control": "ЛКМ/ПКМ | R",
+  "game.solitaire.info.silent": "%s звуки",
+  "game.solitaire.info.silent.on": "Вкл.",
+  "game.solitaire.info.silent.off": "Выкл."
 }
