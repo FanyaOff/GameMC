@@ -6,7 +6,7 @@ import net.minecraft.util.math.random.Random;
 public class SolitaireGame {
 
     public enum State { RUNNING, VICTORY }
-    private SolitaireGame.State state = SolitaireGame.State.RUNNING;
+    private SolitaireGame.State state;
     public State getState() { return state; }
 
     private SolitaireCard[] getFullDeck() { // Генератор 52х карт
@@ -29,6 +29,7 @@ public class SolitaireGame {
     public SolitaireGame() { reset(); }
 
     public void reset() {
+        state = SolitaireGame.State.RUNNING;
         SolitaireCard[] deck = getFullDeck();
         Random rnd = Random.create();
         bases = new SolitaireCard[4];
@@ -61,8 +62,8 @@ public class SolitaireGame {
         }
     }
 
-    public void tryToMoveInTable(SolitaireCard from, int colon) { // перенос карты на стол
-        if(colon > 7 || colon < 0) return;
+    public boolean tryToMoveInTable(SolitaireCard from, int colon) { // перенос карты на стол
+        if(colon > 7 || colon < 0) return false;
         SolitaireCard last = colons[colon];
         if(last == null && from.getDenomination().equals(SolitaireCard.Denominations.KING)) {
 
@@ -72,11 +73,12 @@ public class SolitaireGame {
             }
 
             colons[colon] = from.setPrevious(null);
+            return true;
         } else if(last != null) {
             while (last.getNext() != null) last = last.getNext();
             if((from.getSuit().ordinal() < 2 && last.getSuit().ordinal() < 2)
-                    || (from.getSuit().ordinal() > 1 && last.getSuit().ordinal() > 1)) return;
-            if(last.getDenomination().ordinal() - from.getDenomination().ordinal() != 1) return;
+                    || (from.getSuit().ordinal() > 1 && last.getSuit().ordinal() > 1)) return false;
+            if(last.getDenomination().ordinal() - from.getDenomination().ordinal() != 1) return false;
 
             if(bases[from.getSuit().ordinal()] == from) bases[from.getSuit().ordinal()] = from.getPrevious();
             if (moveCard(from)) {
@@ -85,7 +87,9 @@ public class SolitaireGame {
 
             from.setPrevious(last);
             last.setNext(from);
+            return true;
         }
+        return false;
     }
 
     public boolean tryToMoveInBase(SolitaireCard from) { // перенос карты в базу
@@ -94,6 +98,7 @@ public class SolitaireGame {
         if(last == null && from.getDenomination().equals(SolitaireCard.Denominations.ACE)) {
             if(moveCard(from)) for(int i = 0; i < 7; i++) if(colons[i] == from) colons[i] = null;
             bases[colon] = from.setPrevious(null);
+            if(isWin()) state = State.VICTORY;
             return true;
         } else if(last != null) {
             if(from.getDenomination().ordinal() - last.getDenomination().ordinal() != 1) return false;
@@ -101,13 +106,18 @@ public class SolitaireGame {
             from.setPrevious(last);
             last.setNext(from);
             bases[colon] = from;
+            if(isWin()) state = State.VICTORY;
             return true;
         }
         return false;
     }
 
-    public void nextDeckCard() { // Прокрутка колоды
-        if(gameDeck != null) gameDeck = gameDeck.getNext();
+    public boolean nextDeckCard() { // Прокрутка колоды
+        if(gameDeck != null && gameDeck != gameDeck.getNext()) {
+            gameDeck = gameDeck.getNext();
+            return true;
+        }
+        return false;
     }
 
     private boolean moveCard(SolitaireCard from) { // общий перенос карты
@@ -131,15 +141,21 @@ public class SolitaireGame {
         return false;
     }
 
-    public void checkWin() { // авто складыватель карт
+    public int checkWin() { // авто складыватель карт
         if(check()) {
-            checkWin();
+            return 1+checkWin();
         } else {
-            for (SolitaireCard card : bases)
-                if(card!=null && card.getDenomination() != SolitaireCard.Denominations.KING)
-                    return;
+            if(!isWin()) return 0;
             state = State.VICTORY;
+            return 1;
         }
+    }
+
+    private boolean isWin() {
+        for (SolitaireCard card : bases)
+            if(card == null || card.getDenomination() != SolitaireCard.Denominations.KING)
+                return false;
+        return true;
     }
 
     private boolean check() {

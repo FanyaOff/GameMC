@@ -1,7 +1,10 @@
 package com.fanya.gamemc.minigames.solitaire;
 
 import com.fanya.gamemc.GameMC;
+import com.fanya.gamemc.data.GameRecords;
 import com.fanya.gamemc.minigames.solitaire.subclass.SolitaireCard;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
@@ -30,7 +33,8 @@ public class SolitaireGameScreen extends Screen {
 
     private int cardSizeX, cardSizeY, spacingX, spacingY, playWidth, playHeight, playStartX, playStartY, btnWidth, btnHeight, spacingBtn;
 
-    private int moveCounter = 0;
+    private int moveCounter = 0,
+            bestScore;
     private SolitaireCard selectedCard = null;
     private double deltaX = 0, deltaY = 0;
 
@@ -41,6 +45,7 @@ public class SolitaireGameScreen extends Screen {
 
     @Override
     protected void init() {
+        bestScore = GameRecords.getInstance().getBestScore("solitaire");
         if(game == null) game = new SolitaireGame();
 
         cardSizeX = 32;
@@ -66,12 +71,16 @@ public class SolitaireGameScreen extends Screen {
             if (client != null) client.setScreen(parent);
         }).dimensions(startX, btnY, btnWidth, btnHeight).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.solitaire.info.new_game"), b -> {
-            game.reset();
-            selectedCard = null;
-            deltaX = 0;
-            deltaY = 0;
-        }).dimensions(startX + btnWidth + spacingBtn, btnY, btnWidth, btnHeight).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.solitaire.info.new_game"), b -> reset()
+            ).dimensions(startX + btnWidth + spacingBtn, btnY, btnWidth, btnHeight).build());
+    }
+
+    private void reset() {
+        game.reset();
+        moveCounter = 0;
+        selectedCard = null;
+        deltaX = 0;
+        deltaY = 0;
     }
 
     @Override
@@ -82,7 +91,13 @@ public class SolitaireGameScreen extends Screen {
         // for debugging
         //renderSelectBorder(context, mouseX, mouseY, 0x5FFFFF00);
         renderCards(context);
-
+        if(game.getState() == SolitaireGame.State.VICTORY) {
+            if(bestScore <= 0 || bestScore > moveCounter) {
+                GameRecords.getInstance().setBestScore("solitaire", moveCounter);
+                bestScore = moveCounter;
+            }
+            renderWin(context);
+        }
     }
 
     private void renderSelectBorder(DrawContext context, int mouseX, int mouseY, int selectColor) {
@@ -109,6 +124,12 @@ public class SolitaireGameScreen extends Screen {
         }
     }
 
+    private void renderWin(DrawContext context) {
+        context.fill(playStartX,playStartY, playStartX+playWidth, playStartY+playHeight, 0x7F00FF00);
+        context.drawCenteredTextWithShadow(textRenderer, Text.translatable("game.solitaire.info.victory"),
+                playStartX + playWidth / 2, playStartY + playHeight / 2 - 10, 0xFFFFFFFF);
+    }
+
     private void renderUI(DrawContext context) {
         // main panel
         context.fillGradient(playStartX-2, playStartY-2, playStartX + playWidth+2, playStartY + playHeight+2, 0xFF1a8c99, 0xFF0d5d66);
@@ -125,6 +146,14 @@ public class SolitaireGameScreen extends Screen {
             context.fillGradient(x - 1, playStartY+spacingY-1, x + cardSizeX + 1, playStartY+spacingY+cardSizeY+1, 0x881a8c99, 0x880d5d66);
             context.fill(x, playStartY+spacingY, x + cardSizeX, playStartY+spacingY+cardSizeY, 0xFF0A1A1F);
         }
+        context.drawText(MinecraftClient.getInstance().textRenderer, Text.translatable("game.solitaire.info.score", moveCounter),
+                playStartX+2, playStartY+playHeight-10, 0xFFAAAAAA, false);
+        context.drawText(MinecraftClient.getInstance().textRenderer, Text.translatable("game.solitaire.info.best_score", bestScore),
+                playStartX+2, playStartY+playHeight-19, 0xFFAAAAAA, false);
+        context.drawText(MinecraftClient.getInstance().textRenderer, Text.translatable("game.solitaire.info.control"),
+                playStartX+2, playStartY+playHeight-39, 0xFFAAAAAA, false);
+        context.drawText(MinecraftClient.getInstance().textRenderer, Text.of("by mr_GrANTt"),
+                playStartX+playWidth-70, playStartY+playHeight-10, 0x7FAAAAAA, false);
     }
 
     private void renderCards(DrawContext context) {
@@ -195,36 +224,41 @@ public class SolitaireGameScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyInput input) {
-        if (game.getState() == SolitaireGame.State.RUNNING) {
-            switch (input.key()) {
-                case GLFW.GLFW_KEY_R -> game.reset();
-                case GLFW.GLFW_KEY_ESCAPE -> {
-                    if (client != null) client.setScreen(parent);
+        switch (input.key()) {
+            case GLFW.GLFW_KEY_R -> {
+                reset();
+                return true;
+            }
+            case GLFW.GLFW_KEY_ESCAPE -> {
+                if (client != null) {
+                    client.setScreen(parent);
+                    return true;
                 }
             }
-            return true;
         }
         return super.keyPressed(input);
     }
 
     @Override
     public boolean mouseClicked(Click click, boolean doubled) {
-        if(click.button() == 1) {
-            //play "trrr" sound
-            game.checkWin();
-            return true;
-        } else if(click.button() == 0) {
-            int cardPos = getCardByMouse(click.x(), click.y());
-            if(cardPos == -1) return super.mouseClicked(click, doubled);
-            int cartX = cardPos%10,
-                cartY = (cardPos/10)-1;
-            if(cardPos == 10) {
-                game.nextDeckCard();
-            } else {
-                selectedCard = game.getCardAt(cartX, cartY);
-                if (selectedCard != null && !selectedCard.isShown() && cartY > 0) selectedCard = null;
-                deltaX = click.x();
-                deltaY = click.y();
+        if(game.getState() == SolitaireGame.State.RUNNING) {
+            if (click.button() == 1) {
+                //play "trrr" sound
+                moveCounter += game.checkWin();
+                return true;
+            } else if (click.button() == 0) {
+                int cardPos = getCardByMouse(click.x(), click.y());
+                if (cardPos == -1) return super.mouseClicked(click, doubled);
+                int cartX = cardPos % 10,
+                        cartY = (cardPos / 10) - 1;
+                if (cardPos == 10) {
+                    if (game.nextDeckCard()) moveCounter++;
+                } else {
+                    selectedCard = game.getCardAt(cartX, cartY);
+                    if (selectedCard != null && !selectedCard.isShown() && cartY > 0) selectedCard = null;
+                    deltaX = click.x();
+                    deltaY = click.y();
+                }
             }
         }
         return super.mouseClicked(click, doubled);
@@ -232,22 +266,24 @@ public class SolitaireGameScreen extends Screen {
 
     @Override
     public boolean mouseDragged(Click click, double offsetX, double offsetY) {
-        deltaX += offsetX;
-        deltaY += offsetY;
+        if(game.getState() == SolitaireGame.State.RUNNING) {
+            deltaX += offsetX;
+            deltaY += offsetY;
+        }
         return super.mouseDragged(click, offsetX, offsetY);
     }
 
     @Override
     public boolean mouseReleased(Click click) { // unclick mouse
-        if(click.button() == 0 && selectedCard != null) {
-            int cardPos = getCardByMouse(click.x(), click.y());
-            if(cardPos != -1) {
-                int cartX = cardPos % 10,
-                        cartY = (cardPos / 10) - 1;
-                if (cartY == 0 && cartX > 2)
-                    game.tryToMoveInBase(selectedCard);
-                if (cartY > 0)
-                    game.tryToMoveInTable(selectedCard, cartX);
+        if(game.getState() == SolitaireGame.State.RUNNING) {
+            if(click.button() == 0 && selectedCard != null) {
+                int cardPos = getCardByMouse(click.x(), click.y());
+                if(cardPos != -1) {
+                    int cartX = cardPos % 10,
+                            cartY = (cardPos / 10) - 1;
+                    if (cartY == 0 && cartX > 2 && game.tryToMoveInBase(selectedCard)) moveCounter++;
+                    if (cartY > 0 && game.tryToMoveInTable(selectedCard, cartX)) moveCounter++;
+                }
             }
         }
         selectedCard = null;
@@ -260,9 +296,6 @@ public class SolitaireGameScreen extends Screen {
     public boolean shouldPause() {
         return false; // игра не ставится на паузу при открытии меню
     }
-
-
-
 
     public int getCardByMouse(double mouseX, double mouseY) {
         for(int n = 0; n < 7; n++) {
