@@ -1,0 +1,20 @@
+{
+  "put_game_card": {
+    "subtitle": "sound.gamemc.put_game_card",
+    "sounds": [
+      "gamemc:put_game_card"
+    ]
+  },
+  "get_game_card": {
+    "subtitle": "sound.gamemc.get_game_card",
+    "sounds": [
+      "gamemc:get_game_card"
+    ]
+  },
+  "swap_game_card": {
+    "subtitle": "sound.gamemc.swap_game_card",
+    "sounds": [
+      "gamemc:swap_game_card"
+    ]
+  }
+}

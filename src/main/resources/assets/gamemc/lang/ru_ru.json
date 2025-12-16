@@ -59,5 +59,8 @@
   "game.solitaire.info.score": "Очки: %s",
   "game.solitaire.info.best_score": "Лучший результат: %s",
   "game.solitaire.info.victory": "Вы победили!",
-  "game.solitaire.info.control": "ЛКМ/ПКМ | R"
+  "game.solitaire.info.control": "ЛКМ/ПКМ | R",
+  "game.solitaire.info.silent": "%s звуки",
+  "game.solitaire.info.silent.on": "Вкл.",
+  "game.solitaire.info.silent.off": "Выкл."
 }

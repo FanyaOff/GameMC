@@ -59,5 +59,8 @@
   "game.solitaire.info.score": "Score: %s",
   "game.solitaire.info.best_score": "Best: %s",
   "game.solitaire.info.victory": "You win!",
-  "game.solitaire.info.control": "LMB/RMB | R"
+  "game.solitaire.info.control": "LMB/RMB | R",
+  "game.solitaire.info.silent": "%s sounds",
+  "game.solitaire.info.silent.on": "On",
+  "game.solitaire.info.silent.off": "Off"
 }

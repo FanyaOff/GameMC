@@ -3,14 +3,16 @@ package com.fanya.gamemc.minigames.solitaire;
 import com.fanya.gamemc.GameMC;
 import com.fanya.gamemc.data.GameRecords;
 import com.fanya.gamemc.minigames.solitaire.subclass.SolitaireCard;
+import com.fanya.gamemc.util.CustomSounds;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
@@ -19,6 +21,7 @@ public class SolitaireGameScreen extends Screen {
 
     private static final Identifier[][] CARD_TEXTURES = parsTextures();
     private static final Identifier BACK_CARD = Identifier.of(GameMC.MOD_ID, "textures/gui/suits/card.png");
+    private static boolean PLAY_SOUND = true;
 
     private static Identifier[][] parsTextures() {
         Identifier[][] arr = new Identifier[4][13];
@@ -63,7 +66,7 @@ public class SolitaireGameScreen extends Screen {
         playStartX = Math.max((width - playWidth) / 2, 0);
         playStartY = Math.min((height - playHeight - btnHeight - spacingBtn) * 2 / 3 + btnHeight + spacingBtn, height - playHeight);
 
-        int totalBtnWidth = btnWidth * 2 + spacingBtn * 2;
+        int totalBtnWidth = btnWidth * 3 + spacingBtn * 2;
         int startX = (this.width - totalBtnWidth) / 2;
         int btnY = 3;
 
@@ -73,9 +76,17 @@ public class SolitaireGameScreen extends Screen {
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.solitaire.info.new_game"), b -> reset()
             ).dimensions(startX + btnWidth + spacingBtn, btnY, btnWidth, btnHeight).build());
+
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("game.solitaire.info.silent",
+                PLAY_SOUND ? Text.translatable("game.solitaire.info.silent.off") : Text.translatable("game.solitaire.info.silent.on")), b -> {
+            PLAY_SOUND = !PLAY_SOUND;
+            b.setMessage(Text.translatable("game.solitaire.info.silent",
+                    PLAY_SOUND ? Text.translatable("game.solitaire.info.silent.off") : Text.translatable("game.solitaire.info.silent.on")));
+        }).dimensions(startX + (btnWidth + spacingBtn)*2, btnY, btnWidth, btnHeight).build());
     }
 
     private void reset() {
+        playSound(CustomSounds.SWAP_GAME_CARD, 1f, 1f);
         game.reset();
         moveCounter = 0;
         selectedCard = null;
@@ -222,6 +233,14 @@ public class SolitaireGameScreen extends Screen {
         }
     }
 
+    private void playSound(SoundEvent sound, float pitch, float volume) {
+        if(PLAY_SOUND) {
+            MinecraftClient.getInstance().getSoundManager().play(
+                    PositionedSoundInstance.master(sound, pitch, volume)
+            );
+        }
+    }
+
     @Override
     public boolean keyPressed(KeyInput input) {
         switch (input.key()) {
@@ -243,8 +262,13 @@ public class SolitaireGameScreen extends Screen {
     public boolean mouseClicked(Click click, boolean doubled) {
         if(game.getState() == SolitaireGame.State.RUNNING) {
             if (click.button() == 1) {
-                //play "trrr" sound
-                moveCounter += game.checkWin();
+                int n = game.checkWin();
+                moveCounter += n;
+                if(n > 2) {
+                    playSound(CustomSounds.SWAP_GAME_CARD, 1f, 1f);
+                } else if(n > 0) {
+                    playSound(CustomSounds.PUT_GAME_CARD, 1f, 1f);
+                }
                 return true;
             } else if (click.button() == 0) {
                 int cardPos = getCardByMouse(click.x(), click.y());
@@ -252,10 +276,16 @@ public class SolitaireGameScreen extends Screen {
                 int cartX = cardPos % 10,
                         cartY = (cardPos / 10) - 1;
                 if (cardPos == 10) {
-                    if (game.nextDeckCard()) moveCounter++;
+                    if (game.nextDeckCard()) {
+                        playSound(CustomSounds.GET_GAME_CARD, 1f, 1f);
+                        moveCounter++;
+                    }
                 } else {
+                    playSound(CustomSounds.GET_GAME_CARD, 1f, 1f);
                     selectedCard = game.getCardAt(cartX, cartY);
-                    if (selectedCard != null && !selectedCard.isShown() && cartY > 0) selectedCard = null;
+                    if (selectedCard != null && !selectedCard.isShown() && cartY > 0) {
+                        selectedCard = null;
+                    }
                     deltaX = click.x();
                     deltaY = click.y();
                 }
@@ -277,12 +307,15 @@ public class SolitaireGameScreen extends Screen {
     public boolean mouseReleased(Click click) { // unclick mouse
         if(game.getState() == SolitaireGame.State.RUNNING) {
             if(click.button() == 0 && selectedCard != null) {
+                playSound(CustomSounds.PUT_GAME_CARD, 1f, 1f);
                 int cardPos = getCardByMouse(click.x(), click.y());
                 if(cardPos != -1) {
                     int cartX = cardPos % 10,
                             cartY = (cardPos / 10) - 1;
-                    if (cartY == 0 && cartX > 2 && game.tryToMoveInBase(selectedCard)) moveCounter++;
-                    if (cartY > 0 && game.tryToMoveInTable(selectedCard, cartX)) moveCounter++;
+                    if ((cartY == 0 && cartX > 2 && game.tryToMoveInBase(selectedCard))
+                            || (cartY > 0 && game.tryToMoveInTable(selectedCard, cartX))) {
+                        moveCounter++;
+                    }
                 }
             }
         }
