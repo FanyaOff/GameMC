@@ -14,6 +14,12 @@ In the plans:
 
 # Available Games
 
+## Solitare (thx [mr_GrANTt](https://github.com/mrGrANTt) for this)
+Classic solitare game from windows
+
+<img width="1920" height="979" alt="image" src="https://github.com/user-attachments/assets/03c24432-f317-4e78-8b0d-607ef33863c3" />
+
+
 ## Snake Game
 
 A modernized take on the classic snake experience, enhanced with multiple progression systems, adaptive mechanics, and a fully dynamic food system.
