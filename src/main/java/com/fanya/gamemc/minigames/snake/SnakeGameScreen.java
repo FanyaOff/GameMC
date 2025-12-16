@@ -1,44 +1,54 @@
 package com.fanya.gamemc.minigames.snake;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.sound.PositionedSoundInstance;
+
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
+
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
-import org.joml.Matrix3x2f;
+
+import net.minecraft.sound.SoundEvents;
 import org.lwjgl.glfw.GLFW;
 import com.fanya.gamemc.data.GameRecords;
 
+import java.util.List;
+
 public class SnakeGameScreen extends Screen {
     private int bestScore;
-
-    private static final Identifier SLIME = Identifier.ofVanilla("textures/block/slime_block.png");
-    private static final Identifier EMERALD = Identifier.ofVanilla("textures/block/emerald_block.png");
-
     private final Screen parent;
     private SnakeGame game;
-    private static final int GRID_WIDTH = 25;
-    private static final int GRID_HEIGHT = 18;
+
+    private final int gridWidth;
+    private final int gridHeight;
 
     private static final int MIN_CELL_SIZE = 8;
     private static final int MAX_CELL_SIZE = 28;
+
+    public static int selectedGridWidth = 25;
+    public static int selectedGridHeight = 18;
+
+    private static final Identifier SLIME = Identifier.ofVanilla("textures/block/slime_block.png");
+    private static final Identifier EMERALD = Identifier.ofVanilla("textures/block/emerald_block.png");
 
     private int cellSize;
     private int gridOffsetX;
     private int gridOffsetY;
 
-    public SnakeGameScreen(Screen parent) {
+    public SnakeGameScreen(Screen parent, int gridWidth, int gridHeight) {
         super(Text.translatable("game.snake.title"));
         this.parent = parent;
+        this.gridWidth = gridWidth;
+        this.gridHeight = gridHeight;
     }
 
     @Override
@@ -47,47 +57,63 @@ public class SnakeGameScreen extends Screen {
         bestScore = GameRecords.getInstance().getBestScore("snake");
         calculateGridSize();
 
-        if (game == null) {
-            game = new SnakeGame(GRID_WIDTH, GRID_HEIGHT);
-        }
+        game = new SnakeGame(gridWidth, gridHeight);
+        game.setOnFoodEaten((foodConfig) -> {
+            // звук при съедании любой еды
+            MinecraftClient.getInstance().getSoundManager().play(
+                    PositionedSoundInstance.master(SoundEvents.ENTITY_GENERIC_EAT, 1.0F)
+            );
+        });
 
-        int buttonY = Math.max(this.height - 25, gridOffsetY + GRID_HEIGHT * cellSize + 8);
-        int buttonWidth = Math.min(85, this.width / 6);
+        int buttonY = Math.max(this.height - 30, gridOffsetY + gridHeight * cellSize + 10);
+        int buttonWidth = Math.min(90, this.width / 6);
         int buttonHeight = 16;
         int spacing = 8;
 
         this.addDrawableChild(ButtonWidget.builder(
-                        ScreenTexts.BACK,
-                        button -> {
-                            if (this.client != null) {
-                                this.client.setScreen(this.parent);
-                            }
-                        }
-                )
-                .dimensions(this.width / 2 - buttonWidth - spacing / 2, buttonY, buttonWidth, buttonHeight)
-                .build());
+                ScreenTexts.BACK,
+                button -> {
+                    assert this.client != null;
+                    this.client.setScreen(this.parent);
+                }
+        ).dimensions(this.width / 2 - buttonWidth * 2 - spacing * 2, buttonY, buttonWidth, buttonHeight).build());
 
         this.addDrawableChild(ButtonWidget.builder(
                 Text.translatable("game.snake.button.newgame"),
                 button -> game.reset()
-        ).dimensions(this.width / 2 + spacing / 2, buttonY, buttonWidth, buttonHeight).build());
+        ).dimensions(this.width / 2 - buttonWidth / 2, buttonY, buttonWidth, buttonHeight).build());
+
+        this.addDrawableChild(ButtonWidget.builder(
+                Text.translatable("game.snake.button.select_size"),
+                button -> {
+                    assert this.client != null;
+                    this.client.setScreen(new SnakeSizeSelectScreen(parent));
+                }
+        ).dimensions(this.width / 2 + buttonWidth + spacing * 2, buttonY, buttonWidth + 10, buttonHeight).build());
+    }
+
+    private void recalcGridLayout() {
+        calculateGridSize();
     }
 
     private void calculateGridSize() {
+        int gridW = getDisplayGridWidth();
+        int gridH = getDisplayGridHeight();
+
         int reservedWidth = 160;
         int reservedHeight = 200;
 
         int availableWidth = Math.max(this.width - reservedWidth, 200);
         int availableHeight = Math.max(this.height - reservedHeight, 150);
 
-        int cellWidthBased = availableWidth / GRID_WIDTH;
-        int cellHeightBased = availableHeight / GRID_HEIGHT;
+        int cellWidthBased = availableWidth / gridW;
+        int cellHeightBased = availableHeight / gridH;
 
         cellSize = Math.min(cellWidthBased, cellHeightBased);
         cellSize = Math.max(MIN_CELL_SIZE, Math.min(MAX_CELL_SIZE, cellSize));
 
-        int totalGridWidth = GRID_WIDTH * cellSize;
-        int totalGridHeight = GRID_HEIGHT * cellSize;
+        int totalGridWidth = gridW * cellSize;
+        int totalGridHeight = gridH * cellSize;
 
         gridOffsetX = (this.width - totalGridWidth) / 2;
         gridOffsetY = (this.height - totalGridHeight) / 2;
@@ -101,6 +127,14 @@ public class SnakeGameScreen extends Screen {
         }
     }
 
+    private int getDisplayGridWidth() {
+        return (game != null) ? game.getGridWidth() : selectedGridWidth;
+    }
+
+    private int getDisplayGridHeight() {
+        return (game != null) ? game.getGridHeight() : selectedGridHeight;
+    }
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.renderPanoramaBackground(context, delta);
@@ -111,19 +145,19 @@ public class SnakeGameScreen extends Screen {
         context.fillGradient(
                 gridOffsetX - borderSize,
                 gridOffsetY - borderSize,
-                gridOffsetX + GRID_WIDTH * cellSize + borderSize,
-                gridOffsetY + GRID_HEIGHT * cellSize + borderSize,
+                gridOffsetX + getDisplayGridWidth() * cellSize + borderSize,
+                gridOffsetY + getDisplayGridHeight() * cellSize + borderSize,
                 0xFF1a8c99, 0xFF0d5d66
         );
 
         context.fill(gridOffsetX, gridOffsetY,
-                gridOffsetX + GRID_WIDTH * cellSize,
-                gridOffsetY + GRID_HEIGHT * cellSize,
+                gridOffsetX + getDisplayGridWidth() * cellSize,
+                gridOffsetY + getDisplayGridHeight() * cellSize,
                 0xFF0a1a1f);
 
         drawGrid(context);
 
-        if (!game.isGameOver()) {
+        if (game != null && !game.isGameOver()) {
             game.update();
         }
 
@@ -131,12 +165,15 @@ public class SnakeGameScreen extends Screen {
 
         drawInfoPanel(context);
 
-        if (game.isGameOver()) {
+        if (game != null && game.isGameOver()) {
             if (game.getScore() > bestScore) {
                 bestScore = game.getScore();
                 GameRecords.getInstance().setBestScore("snake", bestScore);
             }
             drawGameOverScreen(context);
+        }
+        if (game != null && game.isGameWon()) {
+            drawGameWonScreen(context);
         }
 
         this.children().forEach(child -> {
@@ -146,29 +183,27 @@ public class SnakeGameScreen extends Screen {
         });
     }
 
-    @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
-
-    }
-
     private void drawGrid(DrawContext context) {
         int gridColor = 0x20FFFFFF;
 
-        for (int x = 0; x <= GRID_WIDTH; x++) {
+        int gridW = getDisplayGridWidth();
+        int gridH = getDisplayGridHeight();
+
+        for (int x = 0; x <= gridW; x++) {
             context.fill(
                     gridOffsetX + x * cellSize,
                     gridOffsetY,
                     gridOffsetX + x * cellSize + 1,
-                    gridOffsetY + GRID_HEIGHT * cellSize,
+                    gridOffsetY + gridH * cellSize,
                     gridColor
             );
         }
 
-        for (int y = 0; y <= GRID_HEIGHT; y++) {
+        for (int y = 0; y <= gridH; y++) {
             context.fill(
                     gridOffsetX,
                     gridOffsetY + y * cellSize,
-                    gridOffsetX + GRID_WIDTH * cellSize,
+                    gridOffsetX + gridW * cellSize,
                     gridOffsetY + y * cellSize + 1,
                     gridColor
             );
@@ -176,26 +211,38 @@ public class SnakeGameScreen extends Screen {
     }
 
     private void drawGame(DrawContext context) {
+        if (game == null) return;
+
         int padding = Math.max(1, cellSize / 10);
 
-        SnakeGame.Position food = game.getFood();
-        Identifier foodTexture = game.getCurrentFoodTexture();
-
-        GpuTextureView foodGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(foodTexture).getGlTextureView();
-
-        int foodSize = Math.max(1, cellSize - padding * 2);
-        if (foodSize > 2) {
-            RenderSystem.setShaderTexture(0, foodGpuTexture);
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, foodTexture,
-                    gridOffsetX + food.x * cellSize + padding,
-                    gridOffsetY + food.y * cellSize + padding,
-                    0, 0,
-                    foodSize, foodSize,
-                    foodSize, foodSize);
+        // Рисуем все еды
+        List<SnakeGame.Position> foods = game.getFoods();
+        for (SnakeGame.Position foodPos : foods) {
+            SnakeGame.FoodConfig cfg = game.getFoodConfigAt(foodPos);
+            Identifier foodTexture = cfg != null ? cfg.getTexture() : null;
+            if (foodTexture != null) {
+                try {
+                    GpuTextureView foodGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(foodTexture).getGlTextureView();
+                    int foodSize = Math.max(1, cellSize - padding * 2);
+                    if (foodSize > 2) {
+                        RenderSystem.setShaderTexture(0, foodGpuTexture);
+                        context.drawTexture(RenderPipelines.GUI_TEXTURED, foodTexture,
+                                gridOffsetX + foodPos.x * cellSize + padding,
+                                gridOffsetY + foodPos.y * cellSize + padding,
+                                0, 0,
+                                foodSize, foodSize,
+                                foodSize, foodSize);
+                    }
+                } catch (Exception ignored) { }
+            }
         }
 
+        long now = System.currentTimeMillis();
+        float t = Math.min(1f, (now - game.getLastMoveTime()) / (float) game.getMoveDelay());
+
         for (int i = 0; i < game.getSnake().size(); i++) {
-            SnakeGame.Position segment = game.getSnake().get(i);
+            SnakeGame.RenderSegment segment = game.getSnake().get(i);
+            segment.updatePosition(t);
 
             Identifier texture = (i == 0) ? EMERALD : SLIME;
             GpuTextureView snakeGpuTexture = MinecraftClient.getInstance().getTextureManager().getTexture(texture).getGlTextureView();
@@ -205,8 +252,8 @@ public class SnakeGameScreen extends Screen {
             if (segmentSize > 2) {
                 RenderSystem.setShaderTexture(0, snakeGpuTexture);
                 context.drawTexture(RenderPipelines.GUI_TEXTURED, texture,
-                        gridOffsetX + segment.x * cellSize + segmentPadding,
-                        gridOffsetY + segment.y * cellSize + segmentPadding,
+                        gridOffsetX + (int)(segment.x * cellSize) + segmentPadding,
+                        gridOffsetY + (int)(segment.y * cellSize) + segmentPadding,
                         0, 0,
                         segmentSize, segmentSize,
                         segmentSize, segmentSize);
@@ -214,11 +261,12 @@ public class SnakeGameScreen extends Screen {
         }
     }
 
+
     private void drawInfoPanel(DrawContext context) {
         int panelHeight = Math.max(24, Math.min(32, cellSize + 8));
         int panelY = Math.max(5, gridOffsetY - panelHeight - 4);
 
-        int panelWidth = GRID_WIDTH * cellSize;
+        int panelWidth = getDisplayGridWidth() * cellSize;
 
         context.fillGradient(
                 gridOffsetX - 3, panelY,
@@ -236,11 +284,11 @@ public class SnakeGameScreen extends Screen {
         int textY1 = panelY + 4;
         int textY2 = panelY + panelHeight - textSize - 2;
 
-        String scoreText = Text.translatable("game.snake.score", game.getScore()).getString();
+        String scoreText = Text.translatable("game.snake.score", game != null ? game.getScore() : 0).getString();
         context.drawTextWithShadow(this.textRenderer, scoreText,
                 gridOffsetX + 5, textY1, 0xFFFFD700);
 
-        String lengthText = Text.translatable("game.snake.length", game.getSnake().size()).getString();
+        String lengthText = Text.translatable("game.snake.length", game != null ? game.getSnake().size() : 0).getString();
         context.drawTextWithShadow(this.textRenderer, lengthText,
                 gridOffsetX + 5, textY2, 0xFF00FF00);
 
@@ -273,12 +321,12 @@ public class SnakeGameScreen extends Screen {
 
     private void drawGameOverScreen(DrawContext context) {
         context.fillGradient(gridOffsetX, gridOffsetY,
-                gridOffsetX + GRID_WIDTH * cellSize,
-                gridOffsetY + GRID_HEIGHT * cellSize,
+                gridOffsetX + getDisplayGridWidth() * cellSize,
+                gridOffsetY + getDisplayGridHeight() * cellSize,
                 0xD0AA0000, 0xD0550000);
 
-        int centerX = gridOffsetX + (GRID_WIDTH * cellSize) / 2;
-        int centerY = gridOffsetY + (GRID_HEIGHT * cellSize) / 2;
+        int centerX = gridOffsetX + (getDisplayGridWidth() * cellSize) / 2;
+        int centerY = gridOffsetY + (getDisplayGridHeight() * cellSize) / 2;
 
         int lineHeight = this.textRenderer.fontHeight + 4;
 
@@ -286,11 +334,11 @@ public class SnakeGameScreen extends Screen {
         context.drawCenteredTextWithShadow(this.textRenderer, gameOverText,
                 centerX, centerY - lineHeight * 2, 0xFFFFFFFF);
 
-        Text scoreText = Text.translatable("game.snake.score", game.getScore());
+        Text scoreText = Text.translatable("game.snake.score", game != null ? game.getScore() : 0);
         context.drawCenteredTextWithShadow(this.textRenderer, scoreText,
                 centerX, centerY - lineHeight / 2, 0xFFFFFF00);
 
-        Text lengthText = Text.translatable("game.snake.length", game.getSnake().size());
+        Text lengthText = Text.translatable("game.snake.length", game != null ? game.getSnake().size() : 0);
         context.drawCenteredTextWithShadow(this.textRenderer, lengthText,
                 centerX, centerY + lineHeight / 2, 0xFF00FF00);
 
@@ -303,9 +351,26 @@ public class SnakeGameScreen extends Screen {
                 centerX, centerY + lineHeight * 2, 0xFFCCCCCC);
     }
 
+    private void drawGameWonScreen(DrawContext context) {
+        context.fillGradient(gridOffsetX, gridOffsetY,
+                gridOffsetX + getDisplayGridWidth() * cellSize,
+                gridOffsetY + getDisplayGridHeight() * cellSize,
+                0xD000AA00, 0xD055FF00);
+
+        int centerX = gridOffsetX + (getDisplayGridWidth() * cellSize) / 2;
+        int centerY = gridOffsetY + (getDisplayGridHeight() * cellSize) / 2;
+
+        Text wonText = Text.translatable("game.snake.won");
+        context.drawCenteredTextWithShadow(this.textRenderer, wonText,
+                centerX, centerY, 0xFFFFFFFF);
+    }
+
+
     @Override
-    public boolean keyPressed(KeyInput keyInput) {
-        switch (keyInput.key()) {
+    public boolean keyPressed(KeyInput input) {
+        if (game == null) return super.keyPressed(input);
+
+        switch (input.key()) {
             case GLFW.GLFW_KEY_W, GLFW.GLFW_KEY_UP -> {
                 game.setDirection(Direction.NORTH);
                 return true;
@@ -333,12 +398,13 @@ public class SnakeGameScreen extends Screen {
                 return true;
             }
         }
-        return super.keyPressed(keyInput);
+        return super.keyPressed(input);
     }
 
     @Override
     public void resize(net.minecraft.client.MinecraftClient client, int width, int height) {
         super.resize(client, width, height);
+        recalcGridLayout();
     }
 
     @Override

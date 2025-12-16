@@ -32,7 +32,6 @@ desktop.ini
 # Fabric / Forge / Minecraft
 run/
 *.class
-*.jar
 *.zip
 *.map
 *.lock
@@ -43,7 +42,3 @@ run/
 *.mca
 *.mcr
 *.dat
-
-# Gradle wrapper
-gradle-wrapper.jar
-gradle-wrapper.properties
