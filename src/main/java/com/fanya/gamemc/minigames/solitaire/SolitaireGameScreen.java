@@ -6,11 +6,9 @@ import com.fanya.gamemc.minigames.solitaire.subclass.SolitaireCard;
 import com.fanya.gamemc.util.CustomSounds;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.Text;
@@ -242,8 +240,8 @@ public class SolitaireGameScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
-        switch (input.key()) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        switch (keyCode) {
             case GLFW.GLFW_KEY_R -> {
                 reset();
                 return true;
@@ -255,13 +253,13 @@ public class SolitaireGameScreen extends Screen {
                 }
             }
         }
-        return super.keyPressed(input);
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if(game.getState() == SolitaireGame.State.RUNNING) {
-            if (click.button() == 1) {
+            if (button == 1) {
                 int n = game.checkWin();
                 moveCounter += n;
                 if(n > 2) {
@@ -270,9 +268,9 @@ public class SolitaireGameScreen extends Screen {
                     playSound(CustomSounds.PUT_GAME_CARD, 1f, 1f);
                 }
                 return true;
-            } else if (click.button() == 0) {
-                int cardPos = getCardByMouse(click.x(), click.y());
-                if (cardPos == -1) return super.mouseClicked(click, doubled);
+            } else if (button == 0) {
+                int cardPos = getCardByMouse(mouseX,mouseY);
+                if (cardPos == -1) return super.mouseClicked(mouseX, mouseY, button);
                 int cartX = cardPos % 10,
                         cartY = (cardPos / 10) - 1;
                 if (cardPos == 10) {
@@ -286,29 +284,29 @@ public class SolitaireGameScreen extends Screen {
                     if (selectedCard != null && !selectedCard.isShown() && cartY > 0) {
                         selectedCard = null;
                     }
-                    deltaX = click.x();
-                    deltaY = click.y();
+                    deltaX = mouseX;
+                    deltaY = mouseY;
                 }
             }
         }
-        return super.mouseClicked(click, doubled);
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if(game.getState() == SolitaireGame.State.RUNNING) {
-            deltaX += offsetX;
-            deltaY += offsetY;
+            this.deltaX += deltaX;
+            this.deltaY += deltaY;
         }
-        return super.mouseDragged(click, offsetX, offsetY);
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }
 
     @Override
-    public boolean mouseReleased(Click click) { // unclick mouse
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if(game.getState() == SolitaireGame.State.RUNNING) {
-            if(click.button() == 0 && selectedCard != null) {
+            if(button == 0 && selectedCard != null) {
                 playSound(CustomSounds.PUT_GAME_CARD, 1f, 1f);
-                int cardPos = getCardByMouse(click.x(), click.y());
+                int cardPos = getCardByMouse(mouseX, mouseY);
                 if(cardPos != -1) {
                     int cartX = cardPos % 10,
                             cartY = (cardPos / 10) - 1;
@@ -322,7 +320,7 @@ public class SolitaireGameScreen extends Screen {
         selectedCard = null;
         deltaX = 0;
         deltaY = 0;
-        return super.mouseReleased(click);
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override

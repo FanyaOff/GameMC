@@ -8,7 +8,6 @@ import com.fanya.gamemc.minigames.solitaire.SolitaireGameScreen;
 import com.fanya.gamemc.util.VersionChecker;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -188,18 +187,18 @@ public class GameSelectionScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int y = listAreaY - scrollOffset;
         for (ButtonWidget btn : gameButtons) {
             if (y + buttonHeight > listAreaY && y < listAreaY + listAreaHeight) {
-                if (btn.mouseClicked(click,doubled)) return true;
+                if (btn.mouseClicked(mouseX, mouseY, button)) return true;
             }
             y += buttonHeight + buttonGap;
         }
 
-        if (backButton.mouseClicked(click,doubled)) return true;
+        if (backButton.mouseClicked(mouseX, mouseY, button)) return true;
 
-        return super.mouseClicked(click,doubled);
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
