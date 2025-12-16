@@ -1,3 +1,7 @@
+# 1.3
+
+* Added solitare game
+
 ## 1.2.2
 
 ### **Fixes in snake game:**
