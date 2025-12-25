@@ -49,6 +49,7 @@ public class SnakeGameScreen extends Screen {
         this.parent = parent;
         this.gridWidth = gridWidth;
         this.gridHeight = gridHeight;
+        game = new SnakeGame(gridWidth, gridHeight);
     }
 
     @Override
@@ -57,7 +58,6 @@ public class SnakeGameScreen extends Screen {
         bestScore = GameRecords.getInstance().getBestScore("snake");
         calculateGridSize();
 
-        game = new SnakeGame(gridWidth, gridHeight);
         game.setOnFoodEaten((foodConfig) -> {
             // звук при съедании любой еды
             MinecraftClient.getInstance().getSoundManager().play(
