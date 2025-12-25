@@ -1,3 +1,7 @@
+# 1.3.1
+
+* **Very important fix:** Game resets after pressing f11
+
 # 1.3
 
 * Added solitare game
