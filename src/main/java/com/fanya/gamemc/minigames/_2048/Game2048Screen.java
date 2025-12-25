@@ -44,11 +44,11 @@ public class Game2048Screen extends Screen {
     public Game2048Screen(Screen parent) {
         super(Text.translatable("game.2048.title"));
         this.parent = parent;
+        game = new Game2048();
     }
 
     @Override
     protected void init() {
-        game = new Game2048();
 
         cellSize = 23;
         spacing = 3;
