@@ -1,3 +1,7 @@
+# 1.3.2
+
+- Important fix in solitare [(by mr_GrANTt)](https://github.com/FanyaOff/GameMC/pull/13)
+
 # 1.3.1
 
 * **Very important fix:** Game resets after pressing f11
