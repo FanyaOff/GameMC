@@ -101,6 +101,7 @@ public class SolitaireGame {
             if(isWin()) state = State.VICTORY;
             return true;
         } else if(last != null) {
+            if(gameDeck != from && from.getNext() != null) return false;
             if(from.getDenomination().ordinal() - last.getDenomination().ordinal() != 1) return false;
             if(moveCard(from)) for(int i = 0; i < 7; i++) if(colons[i] == from) colons[i] = null;
             from.setPrevious(last);
